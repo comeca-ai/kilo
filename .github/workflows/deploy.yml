@@ -1,0 +1,92 @@
+name: Deploy · Cloudflare
+
+# Deploy automático do Worker (kilo-passaporte) a cada push na main.
+# Secrets esperadas (Settings → Secrets and variables → Actions):
+#   CLOUDFLARE_API_TOKEN   — token com "Workers Scripts: Edit" + "D1: Edit" na conta
+#   CLOUDFLARE_ACCOUNT_ID  — id da conta Cloudflare
+#   SIGNING_KEY_JWK        — (opcional, recomendado) JWK privada Ed25519 do emissor;
+#                            se existir, o workflow grava como secret do Worker automaticamente.
+#                            Sem ela, rode uma vez: `npx wrangler secret put SIGNING_KEY_JWK`
+#                            (sem a chave, /api/passaporte responde 503 NO_SIGNING_KEY).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-kilo
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Worker + D1
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    defaults:
+      run:
+        working-directory: worker
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar wrangler
+        working-directory: worker
+        run: npm install --no-save wrangler@^4
+
+      - name: Testes do motor (gate de deploy)
+        working-directory: worker
+        run: node test/run.test.mjs
+
+      - name: Resolver database_id do D1 (cria se não existir)
+        working-directory: worker
+        run: |
+          set -e
+          ACC="$CLOUDFLARE_ACCOUNT_ID"
+          AUTH="Authorization: Bearer $CLOUDFLARE_API_TOKEN"
+          ID=$(curl -s -H "$AUTH" \
+            "https://api.cloudflare.com/client/v4/accounts/$ACC/d1/database" \
+            | jq -r '.result[] | select(.name=="kilo-passaporte") | .uuid' | head -1)
+          if [ -z "$ID" ]; then
+            echo "D1 não encontrado — criando kilo-passaporte..."
+            ID=$(curl -s -X POST -H "$AUTH" -H "content-type: application/json" \
+              -d '{"name":"kilo-passaporte"}' \
+              "https://api.cloudflare.com/client/v4/accounts/$ACC/d1/database" \
+              | jq -r '.result.uuid')
+          fi
+          test -n "$ID" || { echo "FALHA: não consegui obter o database_id"; exit 1; }
+          sed -i "s/database_id = \".*\"/database_id = \"$ID\"/" wrangler.toml
+          echo "database_id resolvido: $ID"
+
+      - name: Aplicar migrations do D1
+        working-directory: worker
+        run: npx wrangler d1 migrations apply kilo-passaporte --remote --yes
+
+      - name: Gravar SIGNING_KEY_JWK no Worker (se a secret existir no repo)
+        working-directory: worker
+        env:
+          SIGNING_KEY_JWK: ${{ secrets.SIGNING_KEY_JWK }}
+        run: |
+          if [ -n "$SIGNING_KEY_JWK" ]; then
+            echo "$SIGNING_KEY_JWK" | npx wrangler secret put SIGNING_KEY_JWK
+            echo "Secret de assinatura gravada."
+          else
+            echo "SIGNING_KEY_JWK não está nas secrets do repo — pulando (ver cabeçalho deste arquivo)."
+          fi
+
+      - name: Deploy do Worker + static assets
+        working-directory: worker
+        run: npx wrangler deploy
+
+      - name: Smoke pós-deploy
+        run: |
+          sleep 3
+          curl -sf "https://kilo-passaporte.${{ vars.CF_SUBDOMAIN || 'SEU_SUBDOMINIO' }}.workers.dev/api/health" \
+            && echo " — health OK" \
+            || echo "AVISO: ajuste vars.CF_SUBDOMAIN no repo para o seu subdomain workers.dev (smoke apenas informativo)"

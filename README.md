@@ -14,6 +14,11 @@ Se baixou via `kilo-repo.bundle`: `git clone kilo-repo.bundle kilo && cd kilo`, 
 
 ## Rodar no Cloudflare (≈10 min)
 
+**Com CI (recomendado):** com as secrets `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` no
+repo GitHub, **todo push na `main` faz o deploy sozinho** — o workflow roda os testes do motor,
+cria o D1 se não existir, aplica migrations, grava a signing key e sobe o Worker. Ver
+"Opção CI" em [`docs/DEPLOY.md`](docs/DEPLOY.md).
+
 O diretório **`worker/` é a unidade deployável**: um único comando (`npm run deploy`)
 sobe a API `/api/*` **e** a landing estática (servida de `worker/public/` como
 Static Assets — `/` → `public/index.html`, sem custo de invocação do Worker).

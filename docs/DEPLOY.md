@@ -179,3 +179,30 @@ Workers → seu Worker → Settings → Domains & Routes. Depois de apontar o do
 | Consultar leads                 | `wrangler d1 execute kilo-passaporte --remote --command "SELECT * FROM leads ORDER BY created_at DESC LIMIT 20"` |
 | Rotacionar chave                | `docs/RUNBOOK-CHAVE.md` §2                          |
 | Rodar testes do motor (23)      | `npm test` (node puro, sem wrangler)                |
+
+---
+
+## Opção CI — deploy automático via GitHub Actions (recomendado)
+
+Se o código está no GitHub (`comeca-ai/kilo`), o deploy acontece sozinho a cada push na `main`
+via `.github/workflows/deploy.yml`. Configuração uma única vez:
+
+1. **Repo → Settings → Secrets and variables → Actions**, criar:
+   - `CLOUDFLARE_API_TOKEN` — em dash.cloudflare.com → My Profile → API Tokens →
+     template "Edit Cloudflare Workers" **+ adicionar permissão D1: Edit** na conta
+   - `CLOUDFLARE_ACCOUNT_ID` — visível na barra lateral do dashboard (ou em qualquer URL do dash)
+   - `SIGNING_KEY_JWK` *(opcional, recomendado)* — a JWK privada Ed25519 gerada com
+     `node worker/scripts/genkey.mjs`. Se presente, o workflow grava no Worker sozinho.
+     Se ausente, após o primeiro deploy rode uma vez: `cd worker && npx wrangler secret put SIGNING_KEY_JWK`
+     (sem ela, `/api/passaporte` responde `503 NO_SIGNING_KEY`).
+2. **(Opcional)** Repo → Settings → Variables → Actions: `CF_SUBDOMAIN` = teu subdomain
+   workers.dev — usado só no smoke pós-deploy.
+
+O que o workflow faz, em ordem: instala wrangler → **roda os 23 testes do motor (gate)** →
+resolve/cria o banco D1 `kilo-passaporte` e injeta o `database_id` no `wrangler.toml` →
+aplica as migrations → grava a signing key (se houver) → `wrangler deploy` (Worker +
+landing de `worker/public/`) → smoke no `/api/health`.
+
+Ou seja: **o primeiro push já deixa tudo no ar** — não precisa rodar os passos manuais
+da seção anterior. Os passos manuais continuam valendo para quem quiser deploy direto
+da própria máquina, sem CI.
