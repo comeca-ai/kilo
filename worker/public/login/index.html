@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kilo · Passaporte Fiscal — Entrar</title>
+<meta name="description" content="Acesse sua conta do Kilo Passaporte Fiscal ou crie uma conta para a sua organização.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============ Reset & tokens (mesmos da landing) ============ */
+*,*::before,*::after{box-sizing:border-box}
+:root{
+  --ink:#0B0F1A;
+  --ink-2:#101627;
+  --paper:#F5EFE0;
+  --paper-2:#FBF6E9;
+  --amber:#E8B53A;
+  --amber-ink:#A8690C;
+  --green:#5BC48A;
+  --green-ink:#2F7A52;
+  --tx-d:#B9C0CF;
+  --tx-d-soft:#8E97AA;
+  --tx-d-strong:#EDE7D6;
+  --tx-l:#2E2A20;
+  --tx-l-soft:#6B6350;
+  --line-d:rgba(245,239,224,.16);
+  --line-d-strong:rgba(245,239,224,.32);
+  --line-l:rgba(46,42,32,.20);
+  --line-l-strong:rgba(46,42,32,.38);
+  --serif:"Fraunces",Georgia,"Times New Roman",serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --ease:cubic-bezier(0.22,1,0.36,1);
+  --maxw:1180px;
+}
+body{
+  margin:0;
+  font-family:var(--serif);
+  font-optical-sizing:auto;
+  font-weight:400;
+  font-size:17px;
+  line-height:1.72;
+  background:var(--ink);
+  color:var(--tx-d);
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+::selection{background:var(--amber);color:var(--ink)}
+h1,h2{margin:0;font-family:var(--serif)}
+p{margin:0}
+a{color:inherit}
+button{font:inherit}
+:focus-visible{outline:1px solid var(--amber);outline-offset:4px}
+.light :focus-visible{outline-color:var(--amber-ink)}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 clamp(20px,4vw,40px);width:100%}
+.dark{background:var(--ink);color:var(--tx-d)}
+
+/* ============ Grão de filme ============ */
+.grain{
+  position:fixed;inset:0;z-index:200;pointer-events:none;
+  opacity:.05;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ============ Nav ============ */
+.nav{
+  position:sticky;top:0;z-index:100;
+  background:rgba(11,15,26,.88);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line-d);
+}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;height:68px}
+.lockup{display:flex;align-items:center;gap:13px;text-decoration:none}
+.lockup-badge{flex:0 0 auto;display:block}
+.lockup-word{display:flex;flex-direction:column;line-height:1.2}
+.lockup-kilo{font-family:var(--mono);font-weight:500;font-size:.6rem;letter-spacing:.4em;color:var(--tx-d-soft)}
+.lockup-prod{font-family:var(--serif);font-weight:500;font-size:1.02rem;letter-spacing:.01em;color:var(--tx-d-strong)}
+.nav-links{display:flex;align-items:center;gap:26px}
+.nav-link{
+  font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--tx-d);text-decoration:none;position:relative;padding:4px 0;
+}
+.nav-link::after{
+  content:"";position:absolute;left:0;right:100%;bottom:0;height:1px;
+  background:var(--amber);transition:right .35s var(--ease);
+}
+.nav-link:hover{color:var(--tx-d-strong)}
+.nav-link:hover::after{right:0}
+
+/* ============ Botões ============ */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  border:1px solid transparent;cursor:pointer;text-decoration:none;text-align:center;
+  font-family:var(--mono);font-weight:600;font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;
+  border-radius:2px;padding:13px 22px;
+  transition:background .3s var(--ease),color .3s var(--ease),border-color .3s var(--ease),transform .3s var(--ease),box-shadow .3s var(--ease);
+}
+.btn:active{transform:translateY(1px)}
+.btn-amber{background:var(--amber);color:var(--ink)}
+.btn-amber:hover{background:#F2C452;box-shadow:0 6px 24px rgba(232,181,58,.22);transform:translateY(-1px)}
+.btn-ghost{border-color:var(--line-d-strong);color:var(--tx-d-strong);background:transparent}
+.btn-ghost:hover{border-color:var(--amber);color:var(--amber);transform:translateY(-1px)}
+.btn-ghost-light{border-color:var(--line-l-strong);color:var(--tx-l);background:transparent}
+.btn-ghost-light:hover{border-color:var(--amber-ink);color:var(--amber-ink);transform:translateY(-1px)}
+.btn:disabled{opacity:.6;cursor:wait;transform:none;box-shadow:none}
+
+/* ============ Palco ============ */
+.stage{
+  position:relative;flex:1;
+  display:flex;align-items:center;justify-content:center;
+  padding:clamp(48px,7vw,88px) clamp(20px,4vw,40px);
+  overflow:hidden;
+}
+.stage-stamp{
+  position:absolute;top:50%;left:50%;
+  width:clamp(340px,44vw,520px);
+  transform:translate(-50%,-50%) rotate(-6deg);
+  color:rgba(232,181,58,.14);
+  pointer-events:none;
+}
+.stamp-svg{display:block;width:100%;height:auto}
+.stamp-arc{font-family:var(--mono);font-weight:500;font-size:11px;letter-spacing:.18em;fill:currentColor;text-transform:uppercase}
+.stamp-mid{font-family:var(--mono);font-weight:600;font-size:15px;letter-spacing:.14em;fill:currentColor}
+.stamp-tiny{font-family:var(--mono);font-weight:500;font-size:8.5px;letter-spacing:.3em;fill:currentColor}
+.stamp-line{stroke:currentColor;stroke-width:1}
+
+/* ============ Card (papel sobre tinta) ============ */
+.card{
+  position:relative;z-index:2;width:min(100%,460px);
+  background:var(--paper-2);color:var(--tx-l);
+  border:1px solid var(--line-l);border-top:3px solid var(--ink);
+  padding:clamp(26px,4vw,40px);
+  box-shadow:0 24px 64px rgba(0,0,0,.45);
+}
+.card-eyebrow{
+  font-family:var(--mono);font-weight:500;font-size:.62rem;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--amber-ink);
+}
+.card-title{font-weight:500;font-size:clamp(1.4rem,2.4vw,1.7rem);color:var(--tx-l);line-height:1.2;margin-top:12px;letter-spacing:-.01em}
+.card-sub{font-size:.94rem;font-weight:340;margin-top:10px;color:var(--tx-l-soft);line-height:1.7}
+
+/* Toggle Entrar / Criar conta */
+.mode-tabs{
+  display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:24px;
+  border:1px solid var(--line-l);
+}
+.mode-tab{
+  font-family:var(--mono);font-weight:600;font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;
+  padding:12px 8px;background:transparent;border:none;cursor:pointer;color:var(--tx-l-soft);
+  transition:background .3s var(--ease),color .3s var(--ease);
+}
+.mode-tab:hover{color:var(--tx-l)}
+.mode-tab[aria-selected="true"]{background:var(--ink);color:var(--amber)}
+.mode-tab:focus-visible{outline-offset:-4px}
+
+/* ============ Formulários ============ */
+.auth-form{margin-top:26px;display:grid;gap:20px}
+.auth-form[hidden]{display:none}
+.field label{
+  display:block;font-family:var(--mono);font-weight:500;font-size:.62rem;
+  letter-spacing:.2em;text-transform:uppercase;color:var(--tx-l-soft);margin-bottom:2px;
+}
+.field input{
+  width:100%;font-family:var(--mono);font-size:.94rem;color:var(--tx-l);
+  background:transparent;border:none;border-bottom:1px solid var(--line-l);
+  border-radius:0;padding:9px 2px;
+  transition:border-color .3s var(--ease);
+}
+.field input::placeholder{color:rgba(46,42,32,.35)}
+.field input:hover{border-bottom-color:var(--line-l-strong)}
+.field input:focus{outline:none;border-bottom-color:var(--amber-ink)}
+.field.invalid input{border-bottom-color:#B03A2E}
+.field-hint{font-family:var(--mono);font-size:.64rem;letter-spacing:.03em;color:var(--tx-l-soft);margin-top:6px;line-height:1.6}
+.field-error{
+  display:none;font-family:var(--mono);font-size:.72rem;letter-spacing:.04em;color:#8E2F24;
+  margin-top:8px;border-left:2px solid #B03A2E;padding-left:10px;line-height:1.6;
+}
+.field.invalid .field-error{display:block}
+.form-error{
+  display:none;font-family:var(--mono);font-size:.74rem;letter-spacing:.04em;color:#8E2F24;
+  margin:0;border-left:2px solid #B03A2E;padding-left:12px;line-height:1.65;
+}
+.form-error.show{display:block}
+.form-error a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+.auth-form .btn{width:100%;padding:15px;margin-top:4px}
+.card-fine{font-family:var(--mono);font-size:.62rem;letter-spacing:.03em;color:var(--tx-l-soft);line-height:1.7;margin-top:22px}
+
+/* ============ Painel logado ============ */
+.panel[hidden]{display:none}
+.panel-hello{font-weight:500;font-size:clamp(1.3rem,2.2vw,1.55rem);color:var(--tx-l);line-height:1.25;margin-top:12px;letter-spacing:-.01em}
+.panel-list{
+  list-style:none;margin:24px 0 0;padding:16px 0 0;border-top:1px solid var(--line-l);
+  font-family:var(--mono);font-size:.78rem;display:grid;gap:12px;font-variant-numeric:tabular-nums;
+}
+.panel-list li{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.panel-list span{color:var(--tx-l-soft);letter-spacing:.06em;text-transform:uppercase;font-size:.66rem}
+.panel-list strong{color:var(--tx-l);font-weight:500;text-align:right;word-break:break-all}
+.panel-next{
+  margin-top:24px;font-size:.96rem;font-weight:340;line-height:1.7;
+  border-left:1px solid var(--amber-ink);padding-left:16px;color:var(--tx-l);
+}
+.panel-next a{color:var(--amber-ink);text-decoration:underline;text-underline-offset:3px}
+.panel-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
+
+/* ============ Rodapé ============ */
+.foot{
+  border-top:1px solid var(--line-d);
+  padding:20px 0;
+  font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;color:var(--tx-d-soft);
+  text-align:center;
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important}
+}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="nav dark">
+  <div class="wrap nav-inner">
+    <a class="lockup" href="/" aria-label="Kilo · Passaporte Fiscal — início">
+      <svg class="lockup-badge" width="30" height="30" viewBox="0 0 30 30" role="img" aria-hidden="true" focusable="false">
+        <rect x="1" y="1" width="28" height="28" fill="none" stroke="#E8B53A" stroke-width="1"/>
+        <rect x="4" y="4" width="22" height="22" fill="none" stroke="#E8B53A" stroke-width="1" stroke-dasharray="2 3"/>
+        <text x="15" y="21.5" text-anchor="middle" font-family="Fraunces,Georgia,serif" font-weight="600" font-size="16" fill="#E8B53A">K</text>
+      </svg>
+      <span class="lockup-word">
+        <span class="lockup-kilo">KILO</span>
+        <span class="lockup-prod">Passaporte Fiscal</span>
+      </span>
+    </a>
+    <nav class="nav-links" aria-label="Navegação principal">
+      <a class="nav-link" href="/">Voltar ao início</a>
+    </nav>
+  </div>
+</header>
+
+<main class="stage">
+  <div class="stage-stamp" aria-hidden="true">
+    <svg class="stamp-svg" viewBox="0 0 200 200" role="img" focusable="false">
+      <defs>
+        <path id="arcLogin" d="M100 21 a79 79 0 1 1 -0.01 0"/>
+      </defs>
+      <circle cx="100" cy="100" r="95" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2 5"/>
+      <circle cx="100" cy="100" r="89" fill="none" stroke="currentColor" stroke-width="1"/>
+      <circle cx="100" cy="100" r="67" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="1 4"/>
+      <text class="stamp-arc"><textPath href="#arcLogin" textLength="494" lengthAdjust="spacingAndGlyphs">PASSAPORTE FISCAL &#8226; ACESSO RESTRITO &#8226; KILO &#8226;</textPath></text>
+      <line class="stamp-line" x1="72" y1="86" x2="128" y2="86"/>
+      <text class="stamp-mid" x="100" y="106" text-anchor="middle">PBKDF2</text>
+      <text class="stamp-tiny" x="100" y="122" text-anchor="middle">SHA-256</text>
+      <line class="stamp-line" x1="72" y1="132" x2="128" y2="132"/>
+    </svg>
+  </div>
+
+  <div class="card">
+    <!-- ===== Formulários ===== -->
+    <section id="auth-view">
+      <p class="card-eyebrow">Portal do cliente</p>
+      <h1 class="card-title" id="card-heading">Entrar na sua conta</h1>
+      <p class="card-sub" id="card-subheading">Acompanhe os passaportes fiscais da sua organização.</p>
+
+      <div class="mode-tabs" role="tablist" aria-label="Modo de acesso">
+        <button type="button" class="mode-tab" id="tab-login" role="tab" aria-selected="true" aria-controls="form-login">Entrar</button>
+        <button type="button" class="mode-tab" id="tab-register" role="tab" aria-selected="false" aria-controls="form-register">Criar conta</button>
+      </div>
+
+      <p class="form-error" id="form-error" role="alert"></p>
+
+      <form class="auth-form" id="form-login" novalidate aria-labelledby="tab-login">
+        <div class="field" id="f-login-email">
+          <label for="login-email">E-mail</label>
+          <input id="login-email" name="email" type="email" autocomplete="email" placeholder="voce@empresa.com.br" required>
+          <p class="field-error" id="err-login-email"></p>
+        </div>
+        <div class="field" id="f-login-senha">
+          <label for="login-senha">Senha</label>
+          <input id="login-senha" name="senha" type="password" autocomplete="current-password" placeholder="Sua senha" required>
+          <p class="field-error" id="err-login-senha"></p>
+        </div>
+        <button class="btn btn-amber" type="submit" id="btn-login">Entrar</button>
+      </form>
+
+      <form class="auth-form" id="form-register" hidden novalidate aria-labelledby="tab-register">
+        <div class="field" id="f-reg-nome">
+          <label for="reg-nome">Nome completo</label>
+          <input id="reg-nome" name="nome" type="text" autocomplete="name" placeholder="Maria Silva" required>
+          <p class="field-error" id="err-reg-nome"></p>
+        </div>
+        <div class="field" id="f-reg-email">
+          <label for="reg-email">E-mail</label>
+          <input id="reg-email" name="email" type="email" autocomplete="email" placeholder="voce@empresa.com.br" required>
+          <p class="field-error" id="err-reg-email"></p>
+        </div>
+        <div class="field" id="f-reg-senha">
+          <label for="reg-senha">Senha</label>
+          <input id="reg-senha" name="senha" type="password" autocomplete="new-password" placeholder="Crie uma senha" required minlength="8">
+          <p class="field-hint">Mínimo de 8 caracteres.</p>
+          <p class="field-error" id="err-reg-senha"></p>
+        </div>
+        <div class="field" id="f-reg-org">
+          <label for="reg-org">Identificador da organização</label>
+          <input id="reg-org" name="org_id" type="text" inputmode="latin" placeholder="ex.: minha-empresa" required>
+          <p class="field-hint">Letras minúsculas, números e hífens — usado na sua URL e nos passaportes.</p>
+          <p class="field-error" id="err-reg-org"></p>
+        </div>
+        <button class="btn btn-amber" type="submit" id="btn-register">Criar conta</button>
+      </form>
+
+      <p class="card-fine">Sessão de 7 dias &middot; senha protegida com PBKDF2-SHA256 &middot; seus dados ficam no seu navegador e no nosso D1.</p>
+    </section>
+
+    <!-- ===== Painel logado ===== -->
+    <section class="panel" id="panel-view" hidden>
+      <p class="card-eyebrow">Sessão ativa</p>
+      <h1 class="panel-hello" id="panel-hello">Olá.</h1>
+      <ul class="panel-list">
+        <li><span>Organização</span><strong id="panel-org">—</strong></li>
+        <li><span>E-mail</span><strong id="panel-email">—</strong></li>
+        <li><span>Sessão válida até</span><strong id="panel-exp">—</strong></li>
+      </ul>
+      <p class="panel-next">Em breve: seus passaportes aqui. Enquanto isso, volte à <a href="/">página inicial</a> e simule o seu crédito.</p>
+      <div class="panel-actions">
+        <button class="btn btn-ghost-light" type="button" id="btn-logout">Sair</button>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="foot dark">
+  <div class="wrap">Kilo · Passaporte Fiscal — DOCUMENTED_FOR_REVIEW</div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  var LS_KEY = "kilo_session_token";
+
+  var authView = document.getElementById("auth-view");
+  var panelView = document.getElementById("panel-view");
+  var cardHeading = document.getElementById("card-heading");
+  var cardSub = document.getElementById("card-subheading");
+  var tabLogin = document.getElementById("tab-login");
+  var tabRegister = document.getElementById("tab-register");
+  var formLogin = document.getElementById("form-login");
+  var formRegister = document.getElementById("form-register");
+  var formError = document.getElementById("form-error");
+  var btnLogin = document.getElementById("btn-login");
+  var btnRegister = document.getElementById("btn-register");
+  var btnLogout = document.getElementById("btn-logout");
+
+  /* ---------- ?next= (só path relativo seguro) ---------- */
+  var nextPath = null;
+  try {
+    var raw = new URLSearchParams(location.search).get("next");
+    if (raw && raw.charAt(0) === "/" && raw.charAt(1) !== "/" && !/[\r\n]/.test(raw)) {
+      nextPath = raw;
+    }
+  } catch (e) { /* ignora */ }
+
+  /* ---------- Helpers de UI ---------- */
+  function clearErrors(scope) {
+    var fields = (scope || document).querySelectorAll(".field.invalid");
+    for (var i = 0; i < fields.length; i++) fields[i].classList.remove("invalid");
+    formError.classList.remove("show");
+    formError.textContent = "";
+  }
+  function fieldError(fieldId, errId, msg) {
+    document.getElementById(fieldId).classList.add("invalid");
+    var el = document.getElementById(errId);
+    el.textContent = msg;
+  }
+  function globalError(msg, html) {
+    formError.classList.add("show");
+    if (html) { formError.innerHTML = html; } else { formError.textContent = msg; }
+  }
+  function setLoading(btn, loading, label) {
+    btn.disabled = loading;
+    btn.textContent = loading ? "Aguarde…" : label;
+  }
+
+  /* ---------- Toggle Entrar / Criar conta ---------- */
+  function setMode(mode) {
+    var isLogin = mode === "login";
+    tabLogin.setAttribute("aria-selected", isLogin ? "true" : "false");
+    tabRegister.setAttribute("aria-selected", isLogin ? "false" : "true");
+    formLogin.hidden = !isLogin;
+    formRegister.hidden = isLogin;
+    cardHeading.textContent = isLogin ? "Entrar na sua conta" : "Criar a sua conta";
+    cardSub.textContent = isLogin
+      ? "Acompanhe os passaportes fiscais da sua organização."
+      : "Cadastro rápido — você já sai com a sessão ativa.";
+    clearErrors();
+    (isLogin ? document.getElementById("login-email") : document.getElementById("reg-nome")).focus();
+  }
+  tabLogin.addEventListener("click", function(){ setMode("login"); });
+  tabRegister.addEventListener("click", function(){ setMode("register"); });
+
+  /* ---------- Slug de org_id ---------- */
+  function slugify(v) {
+    return v
+      .toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "")
+      .replace(/-{2,}/g, "-")
+      .replace(/^-+|-+$/g, "");
+  }
+  var orgInput = document.getElementById("reg-org");
+  orgInput.addEventListener("input", function(){
+    var pos = orgInput.selectionStart;
+    var slugged = slugify(orgInput.value);
+    if (orgInput.value !== slugged) {
+      orgInput.value = slugged;
+      try { orgInput.setSelectionRange(pos, pos); } catch (e) { /* type=text ok */ }
+    }
+  });
+
+  /* ---------- Fetch com Bearer fallback ---------- */
+  function authHeaders() {
+    var h = { "Content-Type": "application/json" };
+    var t = localStorage.getItem(LS_KEY);
+    if (t) h["Authorization"] = "Bearer " + t;
+    return h;
+  }
+
+  /* ---------- Painel logado ---------- */
+  function fmtDate(iso) {
+    try {
+      return new Intl.DateTimeFormat("pt-BR", { dateStyle: "long", timeStyle: "short" }).format(new Date(iso));
+    } catch (e) { return iso; }
+  }
+  function showPanel(user, expiresAt) {
+    document.getElementById("panel-hello").textContent = "Olá, " + (user.nome || "") + ".";
+    document.getElementById("panel-org").textContent = user.org_id || "—";
+    document.getElementById("panel-email").textContent = user.email || "—";
+    document.getElementById("panel-exp").textContent = expiresAt ? fmtDate(expiresAt) : "—";
+    authView.hidden = true;
+    panelView.hidden = false;
+    btnLogout.focus();
+  }
+  function showForms() {
+    panelView.hidden = true;
+    authView.hidden = false;
+  }
+  function onAuthenticated(data) {
+    if (data.session_token) {
+      try { localStorage.setItem(LS_KEY, data.session_token); } catch (e) { /* storage indisponível */ }
+    }
+    if (nextPath) {
+      location.assign(nextPath);
+      return;
+    }
+    showPanel(data.user || {}, data.session_expires_at);
+  }
+
+  /* ---------- Mapeamento de erros da API ---------- */
+  function handleApiError(status, err, mode) {
+    var code = err && err.code;
+    if (status === 429 || code === "RATE_LIMITED") {
+      globalError("Muitas tentativas. Aguarde um minuto.");
+      return;
+    }
+    if (status === 503 || code === "AUTH_UNAVAILABLE") {
+      globalError("Autenticação temporariamente indisponível. Tente em instantes.");
+      return;
+    }
+    switch (code) {
+      case "AUTH_FAILED":
+        globalError("E-mail ou senha incorretos.");
+        break;
+      case "EMAIL_TAKEN":
+        fieldError("f-reg-email", "err-reg-email", "Este e-mail já tem conta.");
+        globalError("", "Este e-mail já tem conta. <a href=\"#\" id=\"goto-login\">Entre com sua senha</a>.");
+        var link = document.getElementById("goto-login");
+        if (link) link.addEventListener("click", function(ev){
+          ev.preventDefault();
+          var email = document.getElementById("reg-email").value;
+          setMode("login");
+          document.getElementById("login-email").value = email;
+          document.getElementById("login-senha").focus();
+        });
+        break;
+      case "AUTH_WEAK_PASSWORD":
+        fieldError(mode === "register" ? "f-reg-senha" : "f-login-senha",
+                   mode === "register" ? "err-reg-senha" : "err-login-senha",
+                   "A senha deve ter ao menos 8 caracteres.");
+        break;
+      case "INVALID_EMAIL":
+        fieldError(mode === "register" ? "f-reg-email" : "f-login-email",
+                   mode === "register" ? "err-reg-email" : "err-login-email",
+                   "Informe um e-mail válido.");
+        break;
+      case "INVALID_NOME":
+        fieldError("f-reg-nome", "err-reg-nome", "Informe seu nome (mínimo de 2 caracteres).");
+        break;
+      case "INVALID_ORG_ID":
+        fieldError("f-reg-org", "err-reg-org", "Informe o identificador da organização.");
+        break;
+      default:
+        globalError("Não foi possível concluir agora. Verifique os dados e tente de novo.");
+    }
+  }
+
+  /* ---------- Submissões ---------- */
+  formLogin.addEventListener("submit", function(ev){
+    ev.preventDefault();
+    clearErrors(formLogin);
+    var email = document.getElementById("login-email").value.trim();
+    var senha = document.getElementById("login-senha").value;
+    var bad = false;
+    if (!email) { fieldError("f-login-email", "err-login-email", "Informe seu e-mail."); bad = true; }
+    if (!senha) { fieldError("f-login-senha", "err-login-senha", "Informe sua senha."); bad = true; }
+    if (bad) return;
+
+    setLoading(btnLogin, true, "Entrar");
+    fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ email: email, senha: senha })
+    }).then(function(res){
+      return res.json().catch(function(){ return {}; }).then(function(data){
+        if (res.ok) { onAuthenticated(data); return; }
+        handleApiError(res.status, data && data.error, "login");
+      });
+    }).catch(function(){
+      globalError("Sem conexão com o servidor. Verifique sua internet e tente novamente.");
+    }).then(function(){
+      setLoading(btnLogin, false, "Entrar");
+    });
+  });
+
+  formRegister.addEventListener("submit", function(ev){
+    ev.preventDefault();
+    clearErrors(formRegister);
+    var nome = document.getElementById("reg-nome").value.trim();
+    var email = document.getElementById("reg-email").value.trim();
+    var senha = document.getElementById("reg-senha").value;
+    var org = document.getElementById("reg-org").value.trim();
+    var bad = false;
+    if (nome.length < 2) { fieldError("f-reg-nome", "err-reg-nome", "Informe seu nome (mínimo de 2 caracteres)."); bad = true; }
+    if (!email) { fieldError("f-reg-email", "err-reg-email", "Informe seu e-mail."); bad = true; }
+    if (senha.length < 8) { fieldError("f-reg-senha", "err-reg-senha", "A senha deve ter ao menos 8 caracteres."); bad = true; }
+    if (!org) { fieldError("f-reg-org", "err-reg-org", "Informe o identificador da organização."); bad = true; }
+    if (bad) return;
+
+    setLoading(btnRegister, true, "Criar conta");
+    fetch("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ nome: nome, email: email, senha: senha, org_id: org })
+    }).then(function(res){
+      return res.json().catch(function(){ return {}; }).then(function(data){
+        if (res.ok) { onAuthenticated(data); return; }
+        handleApiError(res.status, data && data.error, "register");
+      });
+    }).catch(function(){
+      globalError("Sem conexão com o servidor. Verifique sua internet e tente novamente.");
+    }).then(function(){
+      setLoading(btnRegister, false, "Criar conta");
+    });
+  });
+
+  /* ---------- Logout ---------- */
+  btnLogout.addEventListener("click", function(){
+    setLoading(btnLogout, true, "Sair");
+    fetch("/api/auth/logout", {
+      method: "POST",
+      headers: authHeaders(),
+      credentials: "same-origin"
+    }).catch(function(){ /* idempotente — segue mesmo offline */ })
+      .then(function(){
+        try { localStorage.removeItem(LS_KEY); } catch (e) { /* ignora */ }
+        setLoading(btnLogout, false, "Sair");
+        showForms();
+        setMode("login");
+      });
+  });
+
+  /* ---------- Sessão existente? ---------- */
+  fetch("/api/me", {
+    method: "GET",
+    headers: authHeaders(),
+    credentials: "same-origin"
+  }).then(function(res){
+    if (!res.ok) return null;
+    return res.json().catch(function(){ return null; });
+  }).then(function(data){
+    if (data && data.user) showPanel(data.user, data.session_expires_at);
+  }).catch(function(){ /* sem sessão — formulário já está visível */ });
+})();
+</script>
+</body>
+</html>
