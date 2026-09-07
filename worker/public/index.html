@@ -524,6 +524,7 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var
     <nav class="nav-links" aria-label="Navegação principal">
       <a class="nav-link hide-s" href="#como-funciona">Como funciona</a>
       <a class="nav-link hide-s" href="#rating">Rating</a>
+      <a class="nav-link hide-s" href="#termo">Termo</a>
       <a class="nav-link" href="/login">Entrar</a>
       <a class="btn btn-amber btn-sm" href="#simular">Simular</a>
     </nav>
@@ -979,6 +980,48 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var
         <text class="stamp-tiny" x="100" y="122" text-anchor="middle">SHA-256</text>
         <line class="stamp-line" x1="72" y1="132" x2="128" y2="132"/>
       </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 10b. Termo de Responsabilidade ============ -->
+<section class="section light" id="termo">
+  <div class="wrap">
+    <p class="eyebrow rv">TERMO@v1 · sha256:551de160&#8230;</p>
+    <h2 class="h2 rv">Termo de Responsabilidade</h2>
+    <div class="faq rv">
+      <details open>
+        <summary>1. Natureza do atesto</summary>
+        <p>O Passaporte Fiscal é um atesto de completude e coerência documental de dossiê de crédito acumulado de ICMS (rota BR-SP · CAT 42/SP), produzido por motor determinístico e assinado com Ed25519. <strong>Atesto não é homologação.</strong></p>
+      </details>
+      <details>
+        <summary>2. Homologação é da SEFAZ</summary>
+        <p>O aproveitamento e a transferência do crédito dependem exclusivamente de homologação pela SEFAZ/SP, nos termos da Portaria CAT 42/SP. Nenhum rating (A/B/C), valor justo ou deságio calculado pela Kilo representa deferimento, promessa de deferimento ou garantia de resultado fiscal.</p>
+      </details>
+      <details>
+        <summary>3. Base documental</summary>
+        <p>O atesto reflete única e exclusivamente os documentos e parâmetros entregues pelo titular no ato da emissão, vinculados por <code>input_hash</code> e <code>output_hash</code>. A verificação pública detecta alteração do passaporte; não certifica o fato gerador nem os documentos além do que foi conferido pelo motor.</p>
+      </details>
+      <details>
+        <summary>4. Sem garantia de valor</summary>
+        <p>Fair value, deságio e projeções da LC 214 são referências matemáticas (fv = VN·(1−g)/(1+i)^T; PV de 240 parcelas); não são oferta, avaliação de crédito nem recomendação de investimento.</p>
+      </details>
+      <details>
+        <summary>5. Responsabilidade fiscal</summary>
+        <p>A responsabilidade pelo crédito, pela escrituração e pelos documentos permanece integralmente com o titular e seus responsáveis técnicos. A Kilo não exerce contadoria nem consultoria fiscal; o ruleset BR-SP-CAT42@v2026.09 é estrutural e aguarda revisão de especialista fiscal contra o layout oficial da CAT 42/SP.</p>
+      </details>
+      <details>
+        <summary>6. Verificação pública e não retenção</summary>
+        <p>Qualquer parte verifica assinatura e integridade em <code>POST /api/verify</code> (chave pública em <code>GET /api/pubkey</code>). A emissão é stateless: a Kilo não armazena dossiês; a guarda do passaporte é do titular.</p>
+      </details>
+      <details>
+        <summary>7. Limitação de responsabilidade</summary>
+        <p>Na máxima extensão permitida em lei, a Kilo não responde por lucros cessantes, glosas, autuações, perdas ou decisões tomadas com base no atesto.</p>
+      </details>
+      <details>
+        <summary>8. Vigência e versionamento</summary>
+        <p>O passaporte vale na janela <code>issued_at</code> → <code>expires_at</code>; mudança de regra gera nova versão de ruleset (<code>ruleset_hash</code>). Este termo é <strong>TERMO@v1</strong>, vigente a partir de 2026-09-08 · <code>sha256:551de1605e32052f48a3ab92282254ed64a27e3510872164ac61a90bcb110921</code>.</p>
+      </details>
     </div>
   </div>
 </section>
