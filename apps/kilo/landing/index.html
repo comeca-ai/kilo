@@ -110,16 +110,17 @@ button{font:inherit}
   backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
   border-bottom:1px solid var(--line-d);
 }
-.nav-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;height:68px}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:68px;padding:12px 0}
 .lockup{display:flex;align-items:center;gap:13px;text-decoration:none}
 .lockup-badge{flex:0 0 auto;display:block}
 .lockup-word{display:flex;flex-direction:column;line-height:1.2}
 .lockup-kilo{font-family:var(--mono);font-weight:500;font-size:.6rem;letter-spacing:.4em;color:var(--tx-d-soft)}
 .lockup-prod{font-family:var(--serif);font-weight:500;font-size:1.02rem;letter-spacing:.01em;color:var(--tx-d-strong)}
-.nav-links{display:flex;align-items:center;gap:26px}
+.nav-links{display:flex;align-items:center;justify-content:flex-end;gap:26px;flex-wrap:wrap}
 .nav-link{
+  display:inline-flex;align-items:center;min-height:44px;
   font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;
-  color:var(--tx-d);text-decoration:none;position:relative;padding:4px 0;
+  color:var(--tx-d);text-decoration:none;position:relative;padding:10px 0;
 }
 .nav-link::after{
   content:"";position:absolute;left:0;right:100%;bottom:0;height:1px;
@@ -127,12 +128,12 @@ button{font:inherit}
 }
 .nav-link:hover{color:var(--tx-d-strong)}
 .nav-link:hover::after{right:0}
-@media (max-width:640px){.nav-link.hide-s{display:none}}
 
 /* ============ Botões ============ */
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:10px;
   border:1px solid transparent;cursor:pointer;text-decoration:none;text-align:center;
+  min-height:44px;touch-action:manipulation;
   font-family:var(--mono);font-weight:600;font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;
   border-radius:2px;padding:13px 22px;
   transition:background .3s var(--ease),color .3s var(--ease),border-color .3s var(--ease),transform .3s var(--ease),box-shadow .3s var(--ease);
@@ -184,6 +185,16 @@ button{font:inherit}
   pointer-events:none;
 }
 @media (max-width:1023.98px){.hero-stamp{display:none}}
+@media (max-width:640px){
+  .nav-inner{align-items:flex-start;flex-wrap:wrap}
+  .nav-links{width:100%;justify-content:flex-start;gap:10px 18px}
+  .nav-link{font-size:.68rem;letter-spacing:.12em}
+  .nav-links .btn,.hero-cta .btn,.lead-form .btn,#bolsaBridge .btn{width:100%}
+  .sim-grid,.calc,.lead-card{min-width:0}
+  .field-head{align-items:flex-start;flex-wrap:wrap}
+  .seg{justify-content:space-between;gap:12px}
+  .seg button{width:min(29vw,92px);height:min(29vw,92px)}
+}
 
 /* ============ Selo / carimbo ============ */
 .stamp-svg{display:block;width:100%;height:auto}
@@ -342,6 +353,14 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var
   font-family:var(--mono);font-size:.64rem;letter-spacing:.04em;color:rgba(185,192,207,.55);
   margin-top:26px;line-height:1.7;
 }
+.bolsa-bridge{
+  display:grid;gap:14px;margin-top:24px;padding:18px;border:1px solid var(--line-d);
+  background:rgba(245,239,224,.04);
+}
+.bolsa-bridge-eyebrow{font-family:var(--mono);font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--amber)}
+.bolsa-bridge-title{font-size:1.15rem;font-weight:500;color:var(--tx-d-strong);letter-spacing:-.01em}
+.bolsa-bridge-copy{font-size:.92rem;line-height:1.7;color:var(--tx-d)}
+.bolsa-bridge-copy strong{color:var(--amber);font-family:var(--mono);font-weight:600}
 </style>
 <style>
 /* ============ Card de lead ============ */
@@ -543,9 +562,9 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var
       </span>
     </a>
     <nav class="nav-links" aria-label="Navegação principal">
-      <a class="nav-link hide-s" href="#como-funciona">Como funciona</a>
-      <a class="nav-link hide-s" href="#rating">Rating</a>
-      <a class="nav-link hide-s" href="#termo">Termo</a>
+      <a class="nav-link" href="#como-funciona">Como funciona</a>
+      <a class="nav-link" href="#rating">Rating</a>
+      <a class="nav-link" href="#termo">Termo</a>
       <a class="nav-link" href="/login">Entrar</a>
       <a class="btn btn-amber btn-sm" href="#simular">Simular</a>
     </nav>
@@ -682,6 +701,13 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var
         <p class="res-delta" id="resDelta" data-placeholder="true">
           Diferença estimada preservável com protocolo antes da transição: <strong>—</strong>.
         </p>
+
+        <div class="bolsa-bridge" id="bolsaBridge">
+          <span class="bolsa-bridge-eyebrow">Próximo passo comercial</span>
+          <div class="bolsa-bridge-title">Leve este rating para a BNICMS.</div>
+          <p class="bolsa-bridge-copy">Siga para as três portas de negociação com o rating <strong id="bolsaBridgeRating">A</strong> do simulador. O Passaporte <strong>atesta, não homologa</strong>: a homologação continua sendo ato da SEFAZ.</p>
+          <a class="btn btn-amber" id="bolsaCta" href="/bolsa/?rating=A">Negociar na bolsa</a>
+        </div>
 
         <p class="calc-note">
           fv = vn·(1−g)/(1+i)^T &nbsp;·&nbsp; transição: pv de 240 parcelas mensais.
@@ -1146,6 +1172,15 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var
     return { g: g, fv: fv, d: d, pv: pv, perda: perda };
   }
 
+  function wireBolsaCta(rating) {
+    var safeRating = /^[ABC]$/.test(rating) ? rating : 'A';
+    var href = '/bolsa/?rating=' + encodeURIComponent(safeRating);
+    var cta = $('bolsaCta');
+    if (cta) cta.href = href;
+    var ratingEl = $('bolsaBridgeRating');
+    if (ratingEl) ratingEl.textContent = safeRating;
+  }
+
   function render(res) {
     $('resFairValue').textContent = fmtBRL.format(res.fv);
     $('resDesagio').textContent = fmtPct(res.d);
@@ -1153,6 +1188,7 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var
     $('resPerda').textContent = fmtPct(res.perda);
     $('resDelta').innerHTML = 'Diferença estimada preservável com protocolo antes da transição: <strong>' +
       fmtBRL.format(Math.max(0, res.fv - res.pv)) + '</strong>.';
+    wireBolsaCta(state.rating);
   }
 
   /* ============ Conferência pelo servidor ============ */
