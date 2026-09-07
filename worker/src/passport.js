@@ -52,9 +52,15 @@ export function getPublicJwk(env) {
 }
 
 async function getPrivateKey(env) {
-  return importKeyCached(env.SIGNING_KEY_JWK, (jwk) =>
-    crypto.subtle.importKey('jwk', jwk, { name: 'Ed25519' }, false, ['sign'])
-  );
+  return importKeyCached(env.SIGNING_KEY_JWK, (jwk) => {
+    // Workers exige JWA estrito: para Ed25519 o campo "alg" do JWK deve ser "EdDSA"
+    // (valor registrado na IANA). Chaves geradas com alg="Ed25519" (Node aceita)
+    // falham com DataError no importKey. Como o algoritmo já é passado no parâmetro
+    // do importKey, removemos "alg" — normalização aceita em ambos os runtimes.
+    const normalized = { ...jwk };
+    delete normalized.alg;
+    return crypto.subtle.importKey('jwk', normalized, { name: 'Ed25519' }, false, ['sign']);
+  });
 }
 
 // Cache separado para chaves públicas: a chave do Map não é JSON, então não dá para

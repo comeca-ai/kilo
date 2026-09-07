@@ -34,6 +34,12 @@ const kid = (await sha256Hex(publicJwk.x)).slice(0, 16);
 privateJwk.kid = kid;
 publicJwk.kid = kid;
 
+// O Node exporta alg="Ed25519", mas o runtime do Workers exige JWA estrito
+// (para Ed25519 o alg registrado é "EdDSA") e rejeita o importKey com DataError.
+// Removemos "alg": o importKey do Worker já recebe o algoritmo por parâmetro.
+delete privateJwk.alg;
+delete publicJwk.alg;
+
 const privateLine = JSON.stringify(privateJwk);
 
 console.log('=== Par Ed25519 gerado ===\n');

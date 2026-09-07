@@ -35,7 +35,7 @@ directory = "./public"
 [[d1_databases]]
 binding = "DB"
 database_name = "kilo-passaporte"
-database_id = "COLE_AQUI_O_ID" # <- substitua pelo id retornado no `d1 create`
+database_id = "4a83e796-0c44-4f3c-974a-9cc3547bab73" # <- substitua pelo id retornado no `d1 create`
 migrations_dir = "migrations"
 
 [vars]
