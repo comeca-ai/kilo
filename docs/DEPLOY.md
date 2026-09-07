@@ -53,19 +53,21 @@ npm run migrate       # = wrangler d1 migrations apply kilo-passaporte --remote
 
 Cria as tabelas `leads` (captura da landing) e `rate_limits` (store do rate limit).
 
-## 4. Gerar e configurar a chave de assinatura Ed25519
+## 4. Gerar a chave de assinatura Ed25519
 
 ```bash
 npm run genkey        # = node scripts/genkey.mjs
-wrangler secret put SIGNING_KEY_JWK
 ```
 
-- O `genkey` imprime o **JWK privado** (uma linha JSON) — cole essa linha inteira no
-  prompt do `secret put`;
+- O `genkey` imprime o **JWK privado** (uma linha JSON) — guarde-o para o passo 7;
 - **Guarde o JWK privado no cofre** da empresa (1Password/Vault). Ele NUNCA vai no
   `wrangler.toml` nem no git;
 - Rotação de chave (janela com `SIGNING_KEY_JWK_PREVIOUS`) e revogação:
   `docs/RUNBOOK-CHAVE.md`.
+
+> **Ordem importa (docs oficiais):** o `wrangler secret put` só vem **depois** do
+> primeiro `deploy` (passo 7). `secret put` cria uma nova versão do Worker e a
+> deploya na hora — num Worker que ainda não existe, falha com erro 10007.
 
 Sem o secret, `/api/pubkey`, `/api/passaporte` e `/api/verify` respondem
 `503 NO_SIGNING_KEY`; os demais endpoints funcionam normalmente.
@@ -91,13 +93,26 @@ npm run deploy        # = wrangler deploy
 
 Pronto: um comando. A saída mostra a URL `https://kilo-passaporte.<subdomínio>.workers.dev`.
 
+## 7. Gravar o secret de assinatura
+
+Com o Worker já existente (passo 6 feito):
+
+```bash
+printf '%s' "$(cat /caminho/para/jwk-privado.txt)" | wrangler secret put SIGNING_KEY_JWK
+```
+
+(Use `printf '%s'` em vez de `echo` para não acrescentar `\n` ao valor.)
+O `secret put` cria uma nova versão do Worker e a redeploya — não precisa de
+`deploy` extra. Rode de novo com `SIGNING_KEY_JWK_PREVIOUS` na janela de rotação
+(ver `docs/RUNBOOK-CHAVE.md`).
+
 Dev local (simula Workers + D1 + assets na sua máquina):
 
 ```bash
 npm run dev           # http://localhost:8787
 ```
 
-## 7. Verificação pós-deploy
+## 8. Verificação pós-deploy
 
 ```bash
 export BASE="https://kilo-passaporte.<subdomínio>.workers.dev"
@@ -200,8 +215,9 @@ via `.github/workflows/deploy.yml`. Configuração uma única vez:
 
 O que o workflow faz, em ordem: instala wrangler → **roda os 23 testes do motor (gate)** →
 resolve/cria o banco D1 `kilo-passaporte` e injeta o `database_id` no `wrangler.toml` →
-aplica as migrations → grava a signing key (se houver) → `wrangler deploy` (Worker +
-landing de `worker/public/`) → smoke no `/api/health`.
+aplica as migrations → `wrangler deploy` (Worker +
+landing de `worker/public/`) → grava a signing key (se houver — `secret put` redeploya
+sozinho) → smoke no `/api/health` com subdomain descoberto via API.
 
 Ou seja: **o primeiro push já deixa tudo no ar** — não precisa rodar os passos manuais
 da seção anterior. Os passos manuais continuam valendo para quem quiser deploy direto
