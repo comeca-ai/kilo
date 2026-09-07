@@ -1181,8 +1181,8 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var
     $('resDesagio').textContent = fmtPct(res.d);
     $('resPV').textContent = fmtBRL.format(res.pv);
     $('resPerda').textContent = fmtPct(res.perda);
-    $('resDelta').innerHTML = 'Homologar antes da transição preserva <strong>' +
-      fmtBRL.format(Math.max(0, res.fv - res.pv)) + '</strong> do seu crédito.';
+    $('resDelta').innerHTML = 'Diferença estimada preservável com protocolo antes da transição: <strong>' +
+      fmtBRL.format(Math.max(0, res.fv - res.pv)) + '</strong>.';
   }
 
   /* ============ Conferência pelo servidor ============ */
