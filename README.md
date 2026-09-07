@@ -1,5 +1,17 @@
 # Kilo · Passaporte Fiscal
 
+## Publicar no GitHub (comeca-ai/kilo)
+
+O repo já vem com histórico git pronto (branch `main`). São 3 comandos:
+
+```bash
+git remote add origin https://github.com/comeca-ai/kilo.git
+git push -u origin main
+```
+
+Se baixou via `kilo-repo.bundle`: `git clone kilo-repo.bundle kilo && cd kilo`, ajuste o remote com `git remote set-url origin https://github.com/comeca-ai/kilo.git` e push.
+
+
 ## Rodar no Cloudflare (≈10 min)
 
 O diretório **`worker/` é a unidade deployável**: um único comando (`npm run deploy`)
