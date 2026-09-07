@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kilo · Passaporte Fiscal — Quanto vale o seu crédito de ICMS?</title>
+<meta name="description" content="Simule o deságio justo do seu crédito acumulado de ICMS (rota CAT 42/SP) e veja o que a LC 214/2025 faz com quem não homologar até a transição. Calculadora grátis.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============ Reset & tokens ============ */
+*,*::before,*::after{box-sizing:border-box}
+:root{
+  --ink:#0B0F1A;
+  --ink-2:#101627;
+  --paper:#F5EFE0;
+  --paper-2:#FBF6E9;
+  --amber:#E8B53A;
+  --amber-ink:#A8690C;
+  --green:#5BC48A;
+  --green-ink:#2F7A52;
+  --tx-d:#B9C0CF;
+  --tx-d-soft:#8E97AA;
+  --tx-d-strong:#EDE7D6;
+  --tx-l:#2E2A20;
+  --tx-l-soft:#6B6350;
+  --line-d:rgba(245,239,224,.16);
+  --line-d-strong:rgba(245,239,224,.32);
+  --line-l:rgba(46,42,32,.20);
+  --line-l-strong:rgba(46,42,32,.38);
+  --serif:"Fraunces",Georgia,"Times New Roman",serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --ease:cubic-bezier(0.22,1,0.36,1);
+  --maxw:1180px;
+}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  font-family:var(--serif);
+  font-optical-sizing:auto;
+  font-weight:400;
+  font-size:17px;
+  line-height:1.72;
+  background:var(--ink);
+  color:var(--tx-d);
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+}
+::selection{background:var(--amber);color:var(--ink)}
+h1,h2,h3{margin:0;font-family:var(--serif)}
+p{margin:0}
+a{color:inherit}
+button{font:inherit}
+:focus-visible{outline:1px solid var(--amber);outline-offset:4px}
+.light :focus-visible{outline-color:var(--amber-ink)}
+
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 clamp(20px,4vw,40px)}
+.dark{background:var(--ink);color:var(--tx-d)}
+.light{background:var(--paper);color:var(--tx-l)}
+
+/* ============ Grão de filme ============ */
+.grain{
+  position:fixed;inset:0;z-index:200;pointer-events:none;
+  opacity:.05;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ============ Reveal on scroll ============ */
+.fx .rv{opacity:0;transform:translateY(20px);transition:opacity .9s var(--ease),transform .9s var(--ease)}
+.fx .rv.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .fx .rv{opacity:1;transform:none;transition:none}
+}
+
+/* ============ Tipografia utilitária ============ */
+.eyebrow{
+  display:flex;align-items:center;gap:14px;
+  font-family:var(--mono);font-weight:500;font-size:.68rem;
+  letter-spacing:.24em;text-transform:uppercase;color:var(--amber);
+}
+.eyebrow::before{content:"";width:34px;height:1px;background:currentColor;opacity:.7}
+.light .eyebrow{color:var(--amber-ink)}
+.h2{
+  font-weight:480;font-size:clamp(1.9rem,3.6vw,2.7rem);line-height:1.12;
+  letter-spacing:-.015em;margin-top:22px;
+}
+.dark .h2{color:var(--tx-d-strong)}
+.light .h2{color:var(--tx-l)}
+.lead-p{font-size:clamp(1.02rem,1.4vw,1.16rem);font-weight:340;line-height:1.75;max-width:60ch;margin-top:22px}
+.mono{font-family:var(--mono)}
+.tabular{font-variant-numeric:tabular-nums}
+
+/* ============ Nav ============ */
+.nav{
+  position:sticky;top:0;z-index:100;
+  background:rgba(11,15,26,.88);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line-d);
+}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;height:68px}
+.lockup{display:flex;align-items:center;gap:13px;text-decoration:none}
+.lockup-badge{flex:0 0 auto;display:block}
+.lockup-word{display:flex;flex-direction:column;line-height:1.2}
+.lockup-kilo{font-family:var(--mono);font-weight:500;font-size:.6rem;letter-spacing:.4em;color:var(--tx-d-soft)}
+.lockup-prod{font-family:var(--serif);font-weight:500;font-size:1.02rem;letter-spacing:.01em;color:var(--tx-d-strong)}
+.nav-links{display:flex;align-items:center;gap:26px}
+.nav-link{
+  font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--tx-d);text-decoration:none;position:relative;padding:4px 0;
+}
+.nav-link::after{
+  content:"";position:absolute;left:0;right:100%;bottom:0;height:1px;
+  background:var(--amber);transition:right .35s var(--ease);
+}
+.nav-link:hover{color:var(--tx-d-strong)}
+.nav-link:hover::after{right:0}
+@media (max-width:640px){.nav-link.hide-s{display:none}}
+
+/* ============ Botões ============ */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  border:1px solid transparent;cursor:pointer;text-decoration:none;text-align:center;
+  font-family:var(--mono);font-weight:600;font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;
+  border-radius:2px;padding:13px 22px;
+  transition:background .3s var(--ease),color .3s var(--ease),border-color .3s var(--ease),transform .3s var(--ease),box-shadow .3s var(--ease);
+}
+.btn:active{transform:translateY(1px)}
+.btn-amber{background:var(--amber);color:var(--ink)}
+.btn-amber:hover{background:#F2C452;box-shadow:0 6px 24px rgba(232,181,58,.22);transform:translateY(-1px)}
+.btn-ghost{border-color:var(--line-d-strong);color:var(--tx-d-strong);background:transparent}
+.btn-ghost:hover{border-color:var(--amber);color:var(--amber);transform:translateY(-1px)}
+.btn-sm{padding:10px 16px;font-size:.68rem}
+
+/* ============ Hero ============ */
+.hero{position:relative;padding:clamp(64px,9vw,120px) 0 clamp(72px,9vw,110px);overflow:hidden}
+.hero::after{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--line-d);
+}
+.hero-head{max-width:760px;position:relative;z-index:2}
+.h1{
+  font-weight:440;font-size:clamp(2.5rem,6vw,4.5rem);
+  line-height:1.03;letter-spacing:-.02em;color:var(--tx-d-strong);
+  margin-top:26px;
+}
+.h1 em{font-style:italic;font-weight:400;color:var(--amber)}
+.hero-cta{display:flex;flex-wrap:wrap;gap:14px;margin-top:36px}
+.count-pill{
+  display:inline-flex;align-items:baseline;gap:10px;margin:0;margin-top:30px;
+  border-top:1px solid var(--line-d);border-bottom:1px solid var(--line-d);
+  padding:9px 2px;
+  font-family:var(--mono);font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;color:var(--tx-d-soft);
+}
+.count-pill strong{font-weight:600;font-size:.95rem;color:var(--amber);font-variant-numeric:tabular-nums;letter-spacing:.08em}
+.hero-stamp{
+  position:absolute;right:clamp(0px,3vw,40px);top:clamp(48px,7vw,96px);
+  width:clamp(150px,17vw,216px);z-index:1;
+  transform:rotate(-6deg);
+  color:rgba(232,181,58,.62);
+  pointer-events:none;
+}
+@media (max-width:1023.98px){.hero-stamp{display:none}}
+
+/* ============ Selo / carimbo ============ */
+.stamp-svg{display:block;width:100%;height:auto}
+.stamp-arc{
+  font-family:var(--mono);font-weight:500;font-size:11px;letter-spacing:.18em;
+  fill:currentColor;text-transform:uppercase;
+}
+.stamp-mid{font-family:var(--mono);font-weight:600;font-size:15px;letter-spacing:.14em;fill:currentColor}
+.stamp-tiny{font-family:var(--mono);font-weight:500;font-size:8.5px;letter-spacing:.3em;fill:currentColor}
+.stamp-line{stroke:currentColor;stroke-width:1}
+
+/* ============ Faixa de credenciais ============ */
+.creds{
+  border-bottom:1px solid var(--line-d);
+  background:var(--ink);
+}
+.creds-row{
+  display:flex;flex-wrap:wrap;justify-content:center;gap:8px 0;
+  padding:15px 0;
+  font-family:var(--mono);font-weight:500;font-size:.68rem;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--tx-d-soft);
+}
+.creds-row span{padding:0 18px;white-space:nowrap;position:relative}
+.creds-row span+span::before{
+  content:"·";position:absolute;left:-4px;color:var(--amber);opacity:.8;
+}
+.creds-row .hot{color:var(--amber)}
+
+/* ============ Grid simulador + lead ============ */
+.sim-section{padding:clamp(64px,8vw,104px) 0;scroll-margin-top:70px}
+.sim-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:18px 32px}
+.sim-head .lead-p{margin-top:14px}
+.sim-grid{display:grid;gap:26px;margin-top:48px}
+@media (min-width:960px){
+  .sim-grid{grid-template-columns:7fr 5fr;align-items:start}
+}
+@media (max-width:959.98px){
+  .lead-card{display:none}
+  body.has-sim .lead-card{display:block}
+}
+
+/* ============ Calculadora (peça central) ============ */
+.calc{
+  position:relative;
+  background:var(--ink);color:var(--tx-d);
+  border:1px solid var(--line-l);
+  padding:clamp(24px,3.6vw,40px);
+}
+.calc::before{
+  content:"";position:absolute;top:10px;left:10px;right:10px;bottom:10px;
+  border:1px solid rgba(245,239,224,.08);pointer-events:none;
+}
+.calc-head{display:flex;align-items:baseline;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.calc-title{font-weight:500;font-size:clamp(1.3rem,2vw,1.6rem);color:var(--tx-d-strong);letter-spacing:-.01em}
+.badge{
+  font-family:var(--mono);font-weight:500;font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;
+  border:1px solid transparent;padding:5px 12px;
+  visibility:hidden;white-space:nowrap;border-radius:999px;
+}
+.badge.show{visibility:visible}
+.badge.checking{color:var(--tx-d-soft);border-color:var(--line-d)}
+.badge.ok{color:var(--green);border-color:rgba(91,196,138,.5);background:rgba(91,196,138,.08)}
+.field{margin-top:30px}
+.field-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.field-label{
+  font-family:var(--mono);font-weight:500;font-size:.66rem;
+  letter-spacing:.2em;text-transform:uppercase;color:var(--tx-d-soft);
+}
+.field-value{font-family:var(--mono);font-weight:600;font-size:.92rem;color:var(--amber);white-space:nowrap;font-variant-numeric:tabular-nums}
+.vn-input{
+  width:100%;margin-top:12px;
+  font-family:var(--mono);font-weight:500;font-size:clamp(1.4rem,2.4vw,1.8rem);color:var(--tx-d-strong);
+  font-variant-numeric:tabular-nums;
+  background:rgba(245,239,224,.05);border:1px solid var(--line-d);border-radius:2px;
+  padding:13px 16px;
+  transition:border-color .3s var(--ease),background .3s var(--ease);
+}
+.vn-input:hover{border-color:var(--line-d-strong)}
+.vn-input:focus{outline:none;border-color:var(--amber);background:rgba(232,181,58,.06)}
+
+/* Selos de rating */
+.seg{display:flex;gap:clamp(14px,2.4vw,24px);margin-top:16px}
+.seg button{
+  position:relative;flex:0 0 auto;
+  width:clamp(76px,9vw,92px);height:clamp(76px,9vw,92px);border-radius:50%;
+  border:1px dashed var(--line-d-strong);background:transparent;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  color:var(--tx-d-soft);
+  transition:border-color .35s var(--ease),color .35s var(--ease),transform .35s var(--ease),background .35s var(--ease);
+}
+.seg button:hover{border-color:var(--amber);color:var(--tx-d);transform:rotate(-3deg)}
+.seg button[aria-pressed="true"]{
+  border:1px solid var(--amber);color:var(--amber);
+  background:rgba(232,181,58,.07);
+}
+.seg button[aria-pressed="true"]::after{
+  content:"";position:absolute;inset:6px;border-radius:50%;
+  border:1px dashed rgba(232,181,58,.5);
+}
+.seg-r{font-family:var(--serif);font-weight:550;font-size:1.7rem;line-height:1;display:block}
+.seg-g{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;display:block}
+
+/* Sliders customizados */
+input[type="range"]{
+  -webkit-appearance:none;appearance:none;
+  width:100%;height:28px;margin-top:12px;background:transparent;cursor:pointer;
+}
+input[type="range"]::-webkit-slider-runnable-track{
+  height:2px;background:linear-gradient(to right,var(--amber) 0 var(--fill,50%),rgba(245,239,224,.22) var(--fill,50%) 100%);
+}
+input[type="range"]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:18px;height:18px;border-radius:50%;margin-top:-8px;
+  background:var(--amber);border:3px solid var(--ink);
+  box-shadow:0 0 0 1px var(--amber);
+  transition:transform .25s var(--ease);
+}
+input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.15)}
+input[type="range"]::-moz-range-track{height:2px;background:rgba(245,239,224,.22)}
+input[type="range"]::-moz-range-progress{height:2px;background:var(--amber)}
+input[type="range"]::-moz-range-thumb{
+  width:12px;height:12px;border-radius:50%;
+  background:var(--amber);border:3px solid var(--ink);
+  box-shadow:0 0 0 1px var(--amber);
+}
+input[type="range"]:focus{outline:none}
+input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var(--amber),0 0 0 5px rgba(232,181,58,.25)}
+
+.calc-rule{border:none;border-top:1px solid var(--line-d);margin:34px 0 0}
+.res-grid{display:grid;gap:16px;margin-top:26px}
+@media (min-width:560px){.res-grid{grid-template-columns:1fr 1fr}}
+.res-card{
+  border-top:1px solid var(--line-d-strong);padding:18px 2px 0;
+}
+.res-card.good{border-top-color:var(--green)}
+.res-tag{
+  font-family:var(--mono);font-weight:500;font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--tx-d-soft);
+}
+.res-card.good .res-tag{color:var(--green)}
+.res-num{
+  font-family:var(--mono);font-weight:500;
+  font-size:clamp(1.5rem,2.6vw,2rem);line-height:1.2;
+  margin-top:12px;color:var(--tx-d-strong);font-variant-numeric:tabular-nums;letter-spacing:-.01em;
+}
+.res-card.good .res-num{color:var(--amber)}
+.res-sub{font-family:var(--mono);font-size:.74rem;color:var(--tx-d-soft);margin-top:8px;letter-spacing:.02em}
+.res-sub strong{color:var(--amber);font-weight:600;font-variant-numeric:tabular-nums}
+.res-delta{
+  margin-top:28px;font-size:1.02rem;line-height:1.65;font-weight:340;
+  border-left:1px solid var(--amber);padding-left:18px;color:var(--tx-d);
+}
+.res-delta strong{font-family:var(--mono);font-weight:600;color:var(--amber);font-variant-numeric:tabular-nums}
+.calc-note{
+  font-family:var(--mono);font-size:.64rem;letter-spacing:.04em;color:rgba(185,192,207,.55);
+  margin-top:26px;line-height:1.7;
+}
+</style>
+<style>
+/* ============ Card de lead ============ */
+.lead-card{
+  background:var(--paper-2);color:var(--tx-l);
+  border:1px solid var(--line-l);border-top:3px solid var(--ink);
+  padding:clamp(24px,3vw,34px);
+}
+.lead-eyebrow{
+  font-family:var(--mono);font-weight:500;font-size:.62rem;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--amber-ink);
+}
+.lead-title{font-weight:500;font-size:clamp(1.35rem,2vw,1.6rem);color:var(--tx-l);line-height:1.2;margin-top:12px;letter-spacing:-.01em}
+.lead-sub{font-size:.94rem;font-weight:340;margin-top:12px;color:var(--tx-l-soft);line-height:1.7}
+.lead-form{margin-top:26px;display:grid;gap:20px}
+.lead-form label{
+  display:block;font-family:var(--mono);font-weight:500;font-size:.62rem;
+  letter-spacing:.2em;text-transform:uppercase;color:var(--tx-l-soft);margin-bottom:2px;
+}
+.lead-form input{
+  width:100%;font-family:var(--mono);font-size:.94rem;color:var(--tx-l);
+  font-variant-numeric:tabular-nums;
+  background:transparent;border:none;border-bottom:1px solid var(--line-l);
+  border-radius:0;padding:9px 2px;
+  transition:border-color .3s var(--ease);
+}
+.lead-form input::placeholder{color:rgba(46,42,32,.35)}
+.lead-form input:hover{border-bottom-color:var(--line-l-strong)}
+.lead-form input:focus{outline:none;border-bottom-color:var(--amber-ink)}
+.hp{position:absolute;left:-9999px;top:-9999px;height:0;overflow:hidden}
+.form-error{
+  display:none;font-family:var(--mono);font-size:.72rem;letter-spacing:.04em;color:var(--amber-ink);
+  margin:0;border-left:2px solid var(--amber-ink);padding-left:10px;
+}
+.form-error.show{display:block}
+.lead-form .btn{width:100%;padding:15px;margin-top:4px}
+.lead-form .btn:disabled{opacity:.6;cursor:wait;transform:none;box-shadow:none}
+.lead-fine{font-family:var(--mono);font-size:.62rem;letter-spacing:.03em;color:var(--tx-l-soft);line-height:1.7}
+.lead-success{display:none}
+.lead-success.show{display:block}
+.success-check{
+  display:inline-flex;align-items:center;gap:9px;
+  font-family:var(--mono);font-weight:600;font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--green-ink);
+}
+.success-msg{font-size:.96rem;font-weight:340;margin-top:14px;color:var(--tx-l);line-height:1.7}
+.success-sum{
+  list-style:none;margin:22px 0 0;padding:16px 0 0;border-top:1px solid var(--line-l);
+  font-family:var(--mono);font-size:.78rem;display:grid;gap:10px;font-variant-numeric:tabular-nums;
+}
+.success-sum li{display:flex;justify-content:space-between;gap:16px}
+.success-sum span{color:var(--tx-l-soft);letter-spacing:.04em}
+.success-sum strong{color:var(--tx-l);font-weight:600;text-align:right}
+
+/* ============ Faixa de urgência ============ */
+.band{background:var(--amber);color:var(--ink);border-top:1px solid var(--ink);border-bottom:1px solid var(--ink)}
+.band-inner{
+  display:flex;flex-wrap:wrap;gap:8px 28px;align-items:baseline;justify-content:center;
+  padding:20px 0;text-align:center;
+}
+.band .days{
+  font-family:var(--mono);font-weight:600;font-size:.78rem;letter-spacing:.18em;
+  text-transform:uppercase;white-space:nowrap;font-variant-numeric:tabular-nums;
+}
+.band p{font-size:.98rem;font-weight:400;max-width:72ch;line-height:1.6}
+
+/* ============ Atesta / Não atesta ============ */
+.attest-grid{display:grid;gap:48px;margin-top:52px}
+@media (min-width:900px){.attest-grid{grid-template-columns:1fr 1fr;gap:64px}}
+.attest-col{border-top:1px solid var(--line-d-strong);padding-top:22px}
+.attest-col.refuse{border-top-color:var(--line-d)}
+.attest-h{
+  font-family:var(--mono);font-weight:500;font-size:.66rem;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--amber);display:flex;align-items:center;gap:10px;
+}
+.attest-col.refuse .attest-h{color:var(--tx-d-soft)}
+.attest-list{list-style:none;margin:24px 0 0;padding:0;display:grid;gap:20px}
+.attest-list li{display:flex;gap:14px;align-items:flex-start}
+.attest-ico{flex:0 0 auto;margin-top:5px}
+.attest-list h3{font-weight:500;font-size:1.12rem;color:var(--tx-d-strong);letter-spacing:-.005em}
+.attest-list p{font-size:.92rem;font-weight:340;line-height:1.65;margin-top:5px;color:var(--tx-d)}
+.attest-col.refuse .attest-list h3{color:var(--tx-d)}
+.attest-col.refuse .attest-list p{color:var(--tx-d-soft)}
+.pullquote{
+  margin:clamp(56px,7vw,88px) 0 0;padding:clamp(28px,4vw,44px) 0 0;
+  border-top:1px solid var(--line-d);
+  display:grid;gap:20px;
+}
+@media (min-width:900px){.pullquote{grid-template-columns:auto 1fr;gap:clamp(28px,4vw,48px);align-items:start}}
+.pullquote-mark{font-family:var(--serif);font-weight:600;font-size:3.4rem;line-height:.8;color:var(--amber)}
+.pullquote blockquote{
+  margin:0;font-weight:400;font-style:italic;
+  font-size:clamp(1.5rem,3.2vw,2.3rem);line-height:1.25;letter-spacing:-.01em;
+  color:var(--tx-d-strong);max-width:24ch;
+}
+.pullquote cite{
+  font-style:normal;font-family:var(--mono);font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--tx-d-soft);margin-top:18px;display:block;
+}
+
+/* ============ Seções genéricas ============ */
+.section{padding:clamp(64px,8vw,104px) 0}
+.section+.section{border-top:1px solid var(--line-l)}
+.dark.section+.dark.section{border-top-color:var(--line-d)}
+.section-flush{padding-top:0;border-top:none}
+
+/* ============ Passos ============ */
+.steps{display:grid;gap:44px;margin-top:56px}
+@media (min-width:900px){.steps{grid-template-columns:repeat(3,1fr);gap:40px}}
+.step{border-top:1px solid var(--line-l-strong);padding-top:20px;position:relative}
+.step .num{
+  font-family:var(--serif);font-weight:320;font-size:2.6rem;line-height:1;
+  color:var(--amber-ink);font-variant-numeric:tabular-nums;letter-spacing:-.02em;
+}
+.step h3{font-weight:500;font-size:1.22rem;margin:18px 0 8px;color:var(--tx-l);letter-spacing:-.01em}
+.step p{font-size:.94rem;font-weight:340;line-height:1.7;color:var(--tx-l-soft)}
+.step .mono{font-size:.8rem;color:var(--amber-ink)}
+
+/* ============ Tabela de rating ============ */
+.tbl-wrap{overflow-x:auto;margin-top:44px}
+.tbl{width:100%;border-collapse:collapse;min-width:540px}
+.tbl th{
+  font-family:var(--mono);font-weight:500;font-size:.64rem;letter-spacing:.2em;text-transform:uppercase;
+  text-align:left;color:var(--tx-l-soft);padding:0 16px 12px 0;border-bottom:1px solid var(--tx-l);
+}
+.tbl td{padding:22px 16px 22px 0;border-bottom:1px solid var(--line-l);vertical-align:top;font-size:.96rem;font-weight:340;line-height:1.6}
+.tbl .rt{font-family:var(--serif);font-weight:550;font-size:1.8rem;line-height:1}
+.tbl .rt.a{color:var(--green-ink)}
+.tbl .rt.b{color:var(--amber-ink)}
+.tbl .rt.c{color:#8a5a2b}
+.tbl .gl{font-family:var(--mono);font-weight:600;font-size:1rem;white-space:nowrap;font-variant-numeric:tabular-nums}
+.tbl-note{font-family:var(--mono);font-size:.66rem;letter-spacing:.03em;color:var(--tx-l-soft);margin-top:20px;line-height:1.75}
+
+/* ============ FAQ ============ */
+.faq{margin-top:44px}
+.faq details{border-top:1px solid var(--line-l)}
+.faq details:last-child{border-bottom:1px solid var(--line-l)}
+.faq summary{
+  cursor:pointer;list-style:none;
+  display:flex;justify-content:space-between;align-items:baseline;gap:20px;
+  padding:24px 2px;font-weight:500;font-size:clamp(1.05rem,1.6vw,1.2rem);color:var(--tx-l);
+  transition:color .3s var(--ease);
+}
+.faq summary:hover{color:var(--amber-ink)}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{
+  content:"+";font-family:var(--mono);font-weight:400;font-size:1.2rem;color:var(--amber-ink);
+  flex:0 0 auto;transition:transform .35s var(--ease);
+}
+.faq details[open] summary::after{transform:rotate(45deg)}
+.faq details p{padding:0 2px 26px;max-width:70ch;font-size:.98rem;font-weight:340;line-height:1.75;color:var(--tx-l-soft)}
+
+/* ============ CTA final ============ */
+.final{position:relative;overflow:hidden;padding:clamp(80px,10vw,130px) 0;border-top:1px solid var(--line-d)}
+.final-grid{display:grid;gap:48px;align-items:center}
+@media (min-width:900px){.final-grid{grid-template-columns:1fr auto;gap:72px}}
+.final .h2{font-size:clamp(2.1rem,4.4vw,3.4rem);max-width:16ch}
+.final .lead-p{color:var(--tx-d)}
+.final-stamp{
+  width:clamp(140px,16vw,190px);
+  transform:rotate(-6deg);
+  color:rgba(232,181,58,.55);
+}
+@media (max-width:899.98px){.final-stamp{order:-1}}
+.final-motto{
+  margin-top:26px;font-family:var(--mono);font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--amber);
+}
+
+/* ============ Footer ============ */
+.footer{border-top:1px solid var(--line-d);padding:64px 0 44px}
+.foot-grid{display:grid;gap:44px}
+@media (min-width:900px){.foot-grid{grid-template-columns:2fr 1fr 1fr}}
+.foot-tag{font-size:.94rem;font-weight:340;margin-top:18px;max-width:38ch;color:var(--tx-d-soft);line-height:1.7}
+.foot-h{font-family:var(--mono);font-weight:500;font-size:.64rem;letter-spacing:.24em;text-transform:uppercase;color:var(--amber);margin-bottom:16px}
+.foot-list{list-style:none;margin:0;padding:0;display:grid;gap:10px;font-family:var(--mono);font-size:.76rem;letter-spacing:.03em}
+.foot-list a{color:var(--tx-d-soft);text-decoration:none;border-bottom:1px solid transparent;transition:color .3s var(--ease),border-color .3s var(--ease)}
+.foot-list a:hover{color:var(--tx-d-strong);border-bottom-color:var(--amber)}
+.disclaimer{
+  margin-top:52px;padding-top:26px;border-top:1px solid var(--line-d);
+  font-family:var(--mono);font-size:.64rem;letter-spacing:.02em;line-height:1.8;color:rgba(185,192,207,.5);
+  max-width:92ch;
+}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+
+<!-- ============ 1. Nav ============ -->
+<header class="nav dark">
+  <div class="wrap nav-inner">
+    <a class="lockup" href="#topo" aria-label="Kilo · Passaporte Fiscal — início">
+      <svg class="lockup-badge" width="30" height="30" viewBox="0 0 30 30" role="img" aria-hidden="true" focusable="false">
+        <rect x="1" y="1" width="28" height="28" fill="none" stroke="#E8B53A" stroke-width="1"/>
+        <rect x="4" y="4" width="22" height="22" fill="none" stroke="#E8B53A" stroke-width="1" stroke-dasharray="2 3"/>
+        <text x="15" y="21.5" text-anchor="middle" font-family="Fraunces,Georgia,serif" font-weight="600" font-size="16" fill="#E8B53A">K</text>
+      </svg>
+      <span class="lockup-word">
+        <span class="lockup-kilo">KILO</span>
+        <span class="lockup-prod">Passaporte Fiscal</span>
+      </span>
+    </a>
+    <nav class="nav-links" aria-label="Navegação principal">
+      <a class="nav-link hide-s" href="#como-funciona">Como funciona</a>
+      <a class="nav-link hide-s" href="#rating">Rating</a>
+      <a class="btn btn-amber btn-sm" href="#simular">Simular</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ============ 2. Hero ============ -->
+<main id="topo">
+<section class="hero dark">
+  <div class="wrap">
+    <div class="hero-stamp" aria-hidden="true">
+      <svg class="stamp-svg" viewBox="0 0 200 200" role="img" focusable="false">
+        <defs>
+          <path id="arcHero" d="M100 21 a79 79 0 1 1 -0.01 0"/>
+        </defs>
+        <circle cx="100" cy="100" r="95" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2 5"/>
+        <circle cx="100" cy="100" r="89" fill="none" stroke="currentColor" stroke-width="1"/>
+        <circle cx="100" cy="100" r="67" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="1 4"/>
+        <text class="stamp-arc"><textPath href="#arcHero" textLength="494" lengthAdjust="spacingAndGlyphs">PASSAPORTE FISCAL &#8226; DOCUMENTED FOR REVIEW &#8226;</textPath></text>
+        <line class="stamp-line" x1="72" y1="86" x2="128" y2="86"/>
+        <text class="stamp-mid" x="100" y="106" text-anchor="middle">Ed25519</text>
+        <text class="stamp-tiny" x="100" y="122" text-anchor="middle">SHA-256</text>
+        <line class="stamp-line" x1="72" y1="132" x2="128" y2="132"/>
+      </svg>
+    </div>
+    <div class="hero-head">
+      <p class="eyebrow rv">Crédito acumulado de ICMS · Rota CAT 42/SP</p>
+      <h1 class="h1 rv">Quanto vale o seu crédito de ICMS — <em>hoje</em>, e o que ele vira em <em>2033</em>.</h1>
+      <p class="lead-p rv">
+        Simule o deságio justo do seu crédito acumulado e veja o que a LC&nbsp;214/2025
+        faz com quem chegar à transição sem homologar. O Passaporte Fiscal atesta a
+        completude documental do seu crédito — para comprador, advogado e fisco.
+      </p>
+      <div class="hero-cta rv">
+        <a class="btn btn-amber" href="#simular">Simular meu crédito</a>
+        <a class="btn btn-ghost" href="#como-funciona">Como funciona</a>
+      </div>
+      <p class="count-pill rv" role="status">
+        <span>Transição LC&nbsp;214</span>
+        <strong><span class="js-days">—</span>&nbsp;dias</strong>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 3. Faixa de credenciais ============ -->
+<section class="creds" aria-label="Credenciais técnicas">
+  <div class="wrap creds-row rv">
+    <span class="hot">Ed25519</span>
+    <span>SHA-256</span>
+    <span>DOCUMENTED_FOR_REVIEW</span>
+    <span>CAT 42/SP</span>
+    <span>Rating A/B/C</span>
+    <span>Verificável offline</span>
+  </div>
+</section>
+
+<!-- ============ 4. Calculadora + lead ============ -->
+<section class="sim-section light" id="simular">
+  <div class="wrap">
+    <div class="sim-head">
+      <div>
+        <p class="eyebrow rv">Simulador</p>
+        <h2 class="h2 rv">A calculadora do deságio</h2>
+        <p class="lead-p rv">
+          Quatro entradas, dois cenários. À esquerda, o valor justo do crédito com o
+          dossiê atestado; à direita, o que ele vale se virar 240 parcelas na transição.
+        </p>
+      </div>
+    </div>
+
+    <div class="sim-grid">
+      <!-- Calculadora -->
+      <div class="calc rv" role="region" aria-label="Calculadora de deságio">
+        <div class="calc-head">
+          <h3 class="calc-title">Calculadora de deságio</h3>
+          <span class="badge" id="badgeServer" aria-live="polite"></span>
+        </div>
+
+        <div class="field">
+          <div class="field-head">
+            <label class="field-label" for="vnInput">Valor nominal do crédito</label>
+          </div>
+          <input class="vn-input" id="vnInput" type="text" inputmode="numeric"
+                 autocomplete="off" spellcheck="false"
+                 value="2.500.000" data-placeholder="true"
+                 aria-describedby="vnHint">
+          <p id="vnHint" hidden>Informe o valor nominal em reais</p>
+        </div>
+
+        <fieldset class="field" style="border:none;padding:0;margin-left:0;margin-right:0">
+          <legend class="field-label" style="padding:0">Rating estimado do dossiê</legend>
+          <div class="seg" role="group" aria-label="Rating estimado">
+            <button type="button" data-rating="A" aria-pressed="true">
+              <span class="seg-r">A</span><span class="seg-g">glosa 1%</span>
+            </button>
+            <button type="button" data-rating="B" aria-pressed="false">
+              <span class="seg-r">B</span><span class="seg-g">glosa 5%</span>
+            </button>
+            <button type="button" data-rating="C" aria-pressed="false">
+              <span class="seg-r">C</span><span class="seg-g">glosa 12%</span>
+            </button>
+          </div>
+        </fieldset>
+
+        <div class="field">
+          <div class="field-head">
+            <label class="field-label" for="iSlider">Custo de capital (% a.m.)</label>
+            <span class="field-value" id="iValue">1,5% a.m.</span>
+          </div>
+          <input type="range" id="iSlider" min="0.5" max="3" step="0.1" value="1.5"
+                 aria-describedby="iValue">
+        </div>
+
+        <div class="field">
+          <div class="field-head">
+            <label class="field-label" for="tSlider">Tempo até a absorção (meses)</label>
+            <span class="field-value" id="tValue">12 meses</span>
+          </div>
+          <input type="range" id="tSlider" min="3" max="36" step="1" value="12"
+                 aria-describedby="tValue">
+        </div>
+
+        <hr class="calc-rule">
+
+        <div class="res-grid" aria-live="polite">
+          <div class="res-card good">
+            <p class="res-tag">Com passaporte</p>
+            <p class="res-num" id="resFairValue" data-placeholder="true">—</p>
+            <p class="res-sub">deságio justo <strong id="resDesagio">—</strong></p>
+          </div>
+          <div class="res-card">
+            <p class="res-tag">Sem homologar · LC 214</p>
+            <p class="res-num" id="resPV" data-placeholder="true">—</p>
+            <p class="res-sub">perda de <strong id="resPerda">—</strong> em 240 parcelas</p>
+          </div>
+        </div>
+
+        <p class="res-delta" id="resDelta" data-placeholder="true">
+          Homologar antes da transição preserva <strong>—</strong> do seu crédito.
+        </p>
+
+        <p class="calc-note">
+          fv = vn·(1−g)/(1+i)^T &nbsp;·&nbsp; transição: pv de 240 parcelas mensais.
+          Estimativa técnica — não é parecer nem garantia de homologação.
+        </p>
+      </div>
+
+      <!-- Captura de lead -->
+      <aside class="lead-card rv" id="leadCard" aria-label="Receba a análise completa">
+        <div id="leadFormWrap">
+          <p class="lead-eyebrow">Análise preliminar · grátis</p>
+          <h3 class="lead-title">Receba a análise completa do seu crédito</h3>
+          <p class="lead-sub">
+            Deixe seus dados e enviamos o dossiê preliminar com o rating estimado
+            e os próximos passos da rota CAT&nbsp;42/SP.
+          </p>
+          <form class="lead-form" id="leadForm" novalidate>
+            <div>
+              <label for="leadNome">Nome</label>
+              <input id="leadNome" name="nome" type="text" autocomplete="name" required>
+            </div>
+            <div>
+              <label for="leadEmail">E-mail</label>
+              <input id="leadEmail" name="email" type="email" autocomplete="email" required>
+            </div>
+            <div>
+              <label for="leadEmpresa">Empresa</label>
+              <input id="leadEmpresa" name="empresa" type="text" autocomplete="organization">
+            </div>
+            <div>
+              <label for="leadValor">Valor aproximado do crédito</label>
+              <input id="leadValor" name="valor_credito" type="text" inputmode="numeric"
+                     autocomplete="off" data-placeholder="true">
+            </div>
+            <div class="hp" aria-hidden="true">
+              <label for="leadWebsite">Website</label>
+              <input id="leadWebsite" name="website" type="text" tabindex="-1" autocomplete="off">
+            </div>
+            <p class="form-error" id="leadError" role="alert"></p>
+            <button class="btn btn-amber" id="leadSubmit" type="submit">Quero a análise completa</button>
+            <p class="lead-fine">
+              Sem spam. Usamos seus dados apenas para responder a esta solicitação.
+            </p>
+          </form>
+        </div>
+
+        <div class="lead-success" id="leadSuccess" aria-live="polite">
+          <p class="success-check">
+            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+              <circle cx="8" cy="8" r="7" fill="none" stroke="#2F7A52" stroke-width="1.5"/>
+              <path d="M5 8.2l2 2 4-4.4" fill="none" stroke="#2F7A52" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span id="successTitle">Recebido</span>
+          </p>
+          <p class="success-msg" id="successMsg"></p>
+          <ul class="success-sum">
+            <li><span>Valor nominal</span><strong id="sumVn">—</strong></li>
+            <li><span>Rating simulado</span><strong id="sumRating">—</strong></li>
+            <li><span>Valor justo hoje</span><strong id="sumFv">—</strong></li>
+            <li><span>Deságio justo</span><strong id="sumD">—</strong></li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 5. Faixa de urgência ============ -->
+<section class="band" aria-label="Urgência da transição tributária">
+  <div class="wrap band-inner">
+    <span class="days">Transição LC&nbsp;214 · <span class="js-days">—</span> dias</span>
+    <p>
+      Crédito acumulado não homologado até a transição (~2033) vira compensação
+      em 240 parcelas mensais — na prática, um recebível de 20 anos.
+    </p>
+  </div>
+</section>
+
+<!-- ============ 6. O que atesta / o que não atesta ============ -->
+<section class="section dark">
+  <div class="wrap">
+    <p class="eyebrow rv">Escopo do atestado</p>
+    <h2 class="h2 rv">Um atestado técnico, não uma promessa</h2>
+    <div class="attest-grid">
+      <div class="attest-col rv">
+        <p class="attest-h">O que o passaporte atesta</p>
+        <ul class="attest-list">
+          <li>
+            <svg class="attest-ico" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" focusable="false">
+              <circle cx="9" cy="9" r="8" fill="none" stroke="#E8B53A" stroke-width="1" stroke-dasharray="1.5 3"/>
+              <path d="M5.6 9.3l2.2 2.2 4.6-5" fill="none" stroke="#E8B53A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div>
+              <h3>Completude documental</h3>
+              <p>A cadeia de documentos que sustenta o crédito está íntegra, consistente no tempo e sem lacunas que derrubam pedidos de homologação.</p>
+            </div>
+          </li>
+          <li>
+            <svg class="attest-ico" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" focusable="false">
+              <circle cx="9" cy="9" r="8" fill="none" stroke="#E8B53A" stroke-width="1" stroke-dasharray="1.5 3"/>
+              <path d="M5.6 9.3l2.2 2.2 4.6-5" fill="none" stroke="#E8B53A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div>
+              <h3>Aderência à CAT 42/SP</h3>
+              <p>O dossiê segue os requisitos formais da Portaria CAT&nbsp;42/2018 de São Paulo, com evidências cruzadas contra a legislação vigente.</p>
+            </div>
+          </li>
+          <li>
+            <svg class="attest-ico" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" focusable="false">
+              <circle cx="9" cy="9" r="8" fill="none" stroke="#E8B53A" stroke-width="1" stroke-dasharray="1.5 3"/>
+              <path d="M5.6 9.3l2.2 2.2 4.6-5" fill="none" stroke="#E8B53A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div>
+              <h3>Risco estimado de glosa</h3>
+              <p>Rating heurístico A/B/C calibrado com padrões de glosa recorrentes — transparente, reproduzível e revisável.</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+      <div class="attest-col refuse rv">
+        <p class="attest-h">O que o passaporte não atesta</p>
+        <ul class="attest-list">
+          <li>
+            <svg class="attest-ico" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" focusable="false">
+              <circle cx="9" cy="9" r="8" fill="none" stroke="rgba(185,192,207,.4)" stroke-width="1"/>
+              <path d="M5.5 9h7" fill="none" stroke="rgba(185,192,207,.55)" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+            <div>
+              <h3>Não homologa o crédito</h3>
+              <p>A homologação é ato exclusivo da SEFAZ. O passaporte prepara e atesta — o pedido e a decisão seguem o rito oficial.</p>
+            </div>
+          </li>
+          <li>
+            <svg class="attest-ico" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" focusable="false">
+              <circle cx="9" cy="9" r="8" fill="none" stroke="rgba(185,192,207,.4)" stroke-width="1"/>
+              <path d="M5.5 9h7" fill="none" stroke="rgba(185,192,207,.55)" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+            <div>
+              <h3>Não é parecer jurídico</h3>
+              <p>É um atestado técnico de completude e consistência. Ele não substitui seu advogado ou contador — dá a eles um dossiê reproduzível.</p>
+            </div>
+          </li>
+          <li>
+            <svg class="attest-ico" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" focusable="false">
+              <circle cx="9" cy="9" r="8" fill="none" stroke="rgba(185,192,207,.4)" stroke-width="1"/>
+              <path d="M5.5 9h7" fill="none" stroke="rgba(185,192,207,.55)" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+            <div>
+              <h3>Não garante valor de mercado</h3>
+              <p>O deságio simulado é uma estimativa técnica. O preço final de um crédito é negociação entre as partes.</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="pullquote rv">
+      <span class="pullquote-mark" aria-hidden="true">&ldquo;</span>
+      <blockquote>
+        Atesto, não homologo — homologação é da SEFAZ.
+        <cite>Kilo · Passaporte Fiscal — princípio nº 1</cite>
+      </blockquote>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 7. Como funciona ============ -->
+<section class="section light" id="como-funciona">
+  <div class="wrap">
+    <p class="eyebrow rv">Como funciona</p>
+    <h2 class="h2 rv">Do XML ao Passaporte em três passos</h2>
+    <div class="steps">
+      <div class="step rv">
+        <span class="num">01</span>
+        <h3>Você envia XML/EFD</h3>
+        <p>
+          O arquivo original é preservado bit a bit e selado com hash
+          <span class="mono">SHA-256</span> — qualquer alteração posterior é detectável.
+        </p>
+      </div>
+      <div class="step rv">
+        <span class="num">02</span>
+        <h3>O motor valida</h3>
+        <p>
+          Cada regra gera achados reproduzíveis, com evidência e referência normativa,
+          consolidados em um dossiê auditável da rota CAT&nbsp;42/SP.
+        </p>
+      </div>
+      <div class="step rv">
+        <span class="num">03</span>
+        <h3>Você recebe o Passaporte</h3>
+        <p>
+          Documento assinado digitalmente (<span class="mono">Ed25519</span>) com rating
+          A/B/C — verificável offline por comprador, advogado e fisco.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 8. Rating ============ -->
+<section class="section light" id="rating">
+  <div class="wrap">
+    <p class="eyebrow rv">Rating</p>
+    <h2 class="h2 rv">Três letras, um compromisso de transparência</h2>
+    <p class="lead-p rv">
+      O rating resume o risco estimado de glosa do dossiê. Ele é uma heurística
+      interna — pública, reproduzível e sujeita a revisão.
+    </p>
+    <div class="tbl-wrap rv">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th scope="col">Rating</th>
+            <th scope="col">Glosa esperada</th>
+            <th scope="col">Leitura</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="rt a">A</td>
+            <td class="gl">1%</td>
+            <td>Dossiê completo e consistente; risco residual baixo.</td>
+          </tr>
+          <tr>
+            <td class="rt b">B</td>
+            <td class="gl">5%</td>
+            <td>Lacunas pontuais de evidência; saneáveis antes do protocolo.</td>
+          </tr>
+          <tr>
+            <td class="rt c">C</td>
+            <td class="gl">12%</td>
+            <td>Inconsistências materiais; exige saneamento documental prévio.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="tbl-note rv">
+      * Percentuais heurísticos de glosa esperada, usados na calculadora acima.
+      Não constituem parecer jurídico nem garantia de homologação pela SEFAZ.
+    </p>
+  </div>
+</section>
+
+<!-- ============ 9. FAQ ============ -->
+<section class="section light section-flush" id="faq">
+  <div class="wrap">
+    <p class="eyebrow rv">FAQ</p>
+    <h2 class="h2 rv">Perguntas frequentes</h2>
+    <div class="faq rv">
+      <details>
+        <summary>Vocês homologam o crédito junto à SEFAZ?</summary>
+        <p>
+          Não. A homologação é ato exclusivo da SEFAZ. A Kilo prepara o dossiê,
+          valida a completude documental e atesta o que foi verificado — o pedido
+          e a decisão seguem o rito oficial da Portaria CAT&nbsp;42/2018.
+        </p>
+      </details>
+      <details>
+        <summary>O Passaporte Fiscal é um parecer jurídico?</summary>
+        <p>
+          Não. É um atestado técnico de completude e consistência documental,
+          assinado digitalmente e verificável offline. Ele não substitui a
+          análise do seu advogado ou contador — ele dá a eles um dossiê reproduzível.
+        </p>
+      </details>
+      <details>
+        <summary>O que acontece com os meus dados fiscais?</summary>
+        <p>
+          Seus arquivos originais são preservados com hash SHA-256 e usados apenas
+          para gerar o dossiê. Nesta página, a simulação roda no seu navegador e os
+          dados de contato servem somente para responder à sua solicitação.
+        </p>
+      </details>
+      <details>
+        <summary>Quanto custa?</summary>
+        <p>
+          A calculadora é grátis e sempre será. O trabalho de preparação e atestação
+          é remunerado em <em>success fee</em> sobre o valor efetivamente homologado —
+          se o crédito não vira caixa, você não paga.
+        </p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 10. CTA final ============ -->
+<section class="final dark">
+  <div class="wrap final-grid">
+    <div>
+      <p class="eyebrow rv">Pronto para carimbar</p>
+      <h2 class="h2 rv">Seu crédito merece um dossiê à altura.</h2>
+      <p class="lead-p rv">
+        Rode a simulação, receba a análise preliminar e comece a preparação do
+        dossiê antes que a janela da transição comece a fechar.
+      </p>
+      <p class="final-motto rv">Atesto, não homologo — homologação é da SEFAZ.</p>
+      <div class="hero-cta rv">
+        <a class="btn btn-amber" href="#simular">Simular agora</a>
+      </div>
+    </div>
+    <div class="final-stamp rv" aria-hidden="true">
+      <svg class="stamp-svg" viewBox="0 0 200 200" role="img" focusable="false">
+        <defs>
+          <path id="arcFinal" d="M100 21 a79 79 0 1 1 -0.01 0"/>
+        </defs>
+        <circle cx="100" cy="100" r="95" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2 5"/>
+        <circle cx="100" cy="100" r="89" fill="none" stroke="currentColor" stroke-width="1"/>
+        <circle cx="100" cy="100" r="67" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="1 4"/>
+        <text class="stamp-arc"><textPath href="#arcFinal" textLength="494" lengthAdjust="spacingAndGlyphs">PASSAPORTE FISCAL &#8226; DOCUMENTED FOR REVIEW &#8226;</textPath></text>
+        <line class="stamp-line" x1="72" y1="86" x2="128" y2="86"/>
+        <text class="stamp-mid" x="100" y="106" text-anchor="middle">Ed25519</text>
+        <text class="stamp-tiny" x="100" y="122" text-anchor="middle">SHA-256</text>
+        <line class="stamp-line" x1="72" y1="132" x2="128" y2="132"/>
+      </svg>
+    </div>
+  </div>
+</section>
+</main>
+
+<!-- ============ 11. Footer ============ -->
+<footer class="footer dark">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <a class="lockup" href="#topo" aria-label="Kilo · Passaporte Fiscal — voltar ao topo">
+          <svg class="lockup-badge" width="30" height="30" viewBox="0 0 30 30" role="img" aria-hidden="true" focusable="false">
+            <rect x="1" y="1" width="28" height="28" fill="none" stroke="#E8B53A" stroke-width="1"/>
+            <rect x="4" y="4" width="22" height="22" fill="none" stroke="#E8B53A" stroke-width="1" stroke-dasharray="2 3"/>
+            <text x="15" y="21.5" text-anchor="middle" font-family="Fraunces,Georgia,serif" font-weight="600" font-size="16" fill="#E8B53A">K</text>
+          </svg>
+          <span class="lockup-word">
+            <span class="lockup-kilo">KILO</span>
+            <span class="lockup-prod">Passaporte Fiscal</span>
+          </span>
+        </a>
+        <p class="foot-tag">
+          Passaporte Fiscal: atestado técnico de completude documental para
+          créditos acumulados de ICMS.
+        </p>
+      </div>
+      <div>
+        <p class="foot-h">Contato</p>
+        <ul class="foot-list">
+          <li><a href="mailto:pesar@kilo.ia.br">pesar@kilo.ia.br</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="foot-h">Endpoints públicos</p>
+        <ul class="foot-list">
+          <li><a href="https://passaporte-fiscal.jhonata-emerick.workers.dev/api/desagio">/api/desagio</a></li>
+          <li><a href="https://passaporte-fiscal.jhonata-emerick.workers.dev/api/ruleset">/api/ruleset</a></li>
+          <li><a href="https://passaporte-fiscal.jhonata-emerick.workers.dev/api/pubkey">/api/pubkey</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="disclaimer">
+      Estimativa técnica sujeita a revisão. A plataforma não homologa crédito —
+      prepara e atesta. Rating heurístico, não é parecer nem garantia.
+      A homologação de créditos acumulados de ICMS é ato da SEFAZ, nos termos da
+      Portaria CAT&nbsp;42/2018. Valores exibidos na calculadora são ilustrativos.
+    </p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ============ Config ============ */
+  var API_BASE = 'https://passaporte-fiscal.jhonata-emerick.workers.dev';
+  // A API espera i como fração decimal (1,5% a.m. → i=0.015) — confirmado contra
+  // o Worker em produção na auditoria de 7/set/2026. O estado guarda % (0.5–3.0);
+  // 'decimal' faz a conversão state.i/100 na chamada. Não voltar para 'percent'.
+  var I_UNIT = 'decimal';
+  var GLOSA = { A: 0.01, B: 0.05, C: 0.12 };
+  var DEBOUNCE_MS = 350;
+  var LEAD_QUEUE_KEY = 'kilo_lead_queue';
+
+  var state = { vn: 2500000, rating: 'A', i: 1.5, T: 12 };
+  var lastResult = null;
+  var leadValorDirty = false;
+  var leadDone = false;
+
+  /* ============ Helpers ============ */
+  function $(id) { return document.getElementById(id); }
+  var fmtBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+  var fmtNum = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 });
+  function fmtPct(x) {
+    return (x * 100).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
+  }
+  function fmtTaxa(x) {
+    return x.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '% a.m.';
+  }
+  function digitsToNum(str) {
+    var d = String(str).replace(/\D/g, '').slice(0, 13);
+    return d ? parseInt(d, 10) : 0;
+  }
+
+  /* ============ Contador LC 214 ============ */
+  var target = Date.UTC(2033, 0, 1);
+  var days = Math.max(0, Math.ceil((target - Date.now()) / 86400000));
+  var daysEls = document.querySelectorAll('.js-days');
+  for (var k = 0; k < daysEls.length; k++) daysEls[k].textContent = fmtNum.format(days);
+
+  /* ============ Motor de cálculo ============ */
+  function compute() {
+    var g = GLOSA[state.rating];
+    var i = state.i / 100;
+    var vn = state.vn;
+    var fv = vn * (1 - g) / Math.pow(1 + i, state.T);
+    var d = vn > 0 ? 1 - fv / vn : 0;
+    var pv = i > 0 ? (vn / 240) * (1 - Math.pow(1 + i, -240)) / i : vn;
+    var perda = vn > 0 ? 1 - pv / vn : 0;
+    return { g: g, fv: fv, d: d, pv: pv, perda: perda };
+  }
+
+  function render(res) {
+    $('resFairValue').textContent = fmtBRL.format(res.fv);
+    $('resDesagio').textContent = fmtPct(res.d);
+    $('resPV').textContent = fmtBRL.format(res.pv);
+    $('resPerda').textContent = fmtPct(res.perda);
+    $('resDelta').innerHTML = 'Homologar antes da transição preserva <strong>' +
+      fmtBRL.format(Math.max(0, res.fv - res.pv)) + '</strong> do seu crédito.';
+  }
+
+  /* ============ Conferência pelo servidor ============ */
+  var badge = $('badgeServer');
+  var seq = 0, debounceTimer = null, aborter = null;
+
+  function setBadge(mode) {
+    if (mode === 'ok') {
+      badge.textContent = '✓ conferido pelo servidor';
+      badge.className = 'badge show ok';
+    } else if (mode === 'checking') {
+      badge.textContent = '… conferindo no servidor';
+      badge.className = 'badge show checking';
+    } else {
+      badge.textContent = '';
+      badge.className = 'badge';
+    }
+  }
+
+  function scheduleServerCheck() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(serverCheck, DEBOUNCE_MS);
+  }
+
+  function serverCheck() {
+    var mySeq = ++seq;
+    if (aborter) { try { aborter.abort(); } catch (e) {} }
+    aborter = ('AbortController' in window) ? new AbortController() : null;
+    var iParam = I_UNIT === 'decimal' ? state.i / 100 : state.i;
+    var url = API_BASE + '/api/desagio?vn=' + encodeURIComponent(state.vn) +
+      '&rating=' + encodeURIComponent(state.rating) +
+      '&i=' + encodeURIComponent(iParam) +
+      '&T=' + encodeURIComponent(state.T);
+    fetch(url, aborter ? { signal: aborter.signal } : {})
+      .then(function (r) {
+        if (!r.ok) throw new Error('http ' + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        if (mySeq !== seq || !lastResult) return;
+        var fvCents = Math.round(lastResult.fv * 100);
+        var okFv = typeof data.fair_value_cents === 'number' &&
+          Math.abs(data.fair_value_cents - fvCents) <= 1;
+        var okD = typeof data.desagio_justo === 'number' &&
+          Math.abs(data.desagio_justo - lastResult.d) < 0.0005;
+        setBadge(okFv && okD ? 'ok' : 'idle');
+      })
+      .catch(function (err) {
+        if (err && err.name === 'AbortError') return;
+        if (mySeq !== seq) return;
+        setBadge('idle'); // segue com o cálculo local, sem drama
+      });
+  }
+
+  /* ============ Entradas da calculadora ============ */
+  var vnInput = $('vnInput');
+
+  function syncLeadValor() {
+    if (leadValorDirty || leadDone) return;
+    $('leadValor').value = fmtNum.format(state.vn);
+    $('leadValor').dataset.num = String(state.vn);
+  }
+
+  function onSim(userAction) {
+    if (userAction) document.body.classList.add('has-sim');
+    lastResult = compute();
+    render(lastResult);
+    syncLeadValor();
+    if (userAction) setBadge('checking');
+    scheduleServerCheck();
+  }
+
+  vnInput.addEventListener('input', function () {
+    var n = digitsToNum(vnInput.value);
+    state.vn = n;
+    vnInput.value = n ? fmtNum.format(n) : '';
+    onSim(true);
+  });
+
+  var segBtns = document.querySelectorAll('.seg button[data-rating]');
+  for (var b = 0; b < segBtns.length; b++) {
+    segBtns[b].addEventListener('click', function () {
+      state.rating = this.getAttribute('data-rating');
+      for (var j = 0; j < segBtns.length; j++) {
+        segBtns[j].setAttribute('aria-pressed', segBtns[j] === this ? 'true' : 'false');
+      }
+      onSim(true);
+    });
+  }
+
+  /* Progresso visual dos sliders (track fino, preenchimento âmbar) */
+  function paintRange(el) {
+    var min = parseFloat(el.min), max = parseFloat(el.max), val = parseFloat(el.value);
+    var pct = ((val - min) / (max - min)) * 100;
+    el.style.setProperty('--fill', pct + '%');
+  }
+
+  var iSlider = $('iSlider'), tSlider = $('tSlider');
+  iSlider.addEventListener('input', function () {
+    state.i = parseFloat(iSlider.value);
+    $('iValue').textContent = fmtTaxa(state.i);
+    paintRange(iSlider);
+    onSim(true);
+  });
+  tSlider.addEventListener('input', function () {
+    state.T = parseInt(tSlider.value, 10);
+    $('tValue').textContent = state.T + ' meses';
+    paintRange(tSlider);
+    onSim(true);
+  });
+  paintRange(iSlider);
+  paintRange(tSlider);
+
+  /* ============ Captura de lead ============ */
+  var leadForm = $('leadForm');
+  var leadValor = $('leadValor');
+  var leadError = $('leadError');
+  var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+  leadValor.addEventListener('input', function () {
+    leadValorDirty = true;
+    var n = digitsToNum(leadValor.value);
+    leadValor.value = n ? fmtNum.format(n) : '';
+    leadValor.dataset.num = String(n);
+  });
+
+  function showError(msg) {
+    leadError.textContent = msg;
+    leadError.classList.add('show');
+  }
+  function clearError() {
+    leadError.textContent = '';
+    leadError.classList.remove('show');
+  }
+
+  function showSuccess(offline) {
+    leadDone = true;
+    $('leadFormWrap').style.display = 'none';
+    $('successTitle').textContent = offline ? 'Interesse anotado' : 'Recebido';
+    $('successMsg').textContent = offline
+      ? 'Anotamos seu interesse — se não retornarmos em 48h, escreva para pesar@kilo.ia.br.'
+      : 'Obrigado! A análise preliminar do seu crédito chega por e-mail em até 48h úteis.';
+    $('sumVn').textContent = fmtBRL.format(state.vn);
+    $('sumRating').textContent = state.rating + ' (glosa ' + fmtPct(GLOSA[state.rating]) + ')';
+    $('sumFv').textContent = lastResult ? fmtBRL.format(lastResult.fv) : '—';
+    $('sumD').textContent = lastResult ? fmtPct(lastResult.d) : '—';
+    $('leadSuccess').classList.add('show');
+  }
+
+  function queueLead(payload) {
+    try {
+      var q = JSON.parse(localStorage.getItem(LEAD_QUEUE_KEY) || '[]');
+      q.push(payload);
+      localStorage.setItem(LEAD_QUEUE_KEY, JSON.stringify(q));
+    } catch (e) {}
+  }
+
+  function postLead(payload) {
+    return fetch(API_BASE + '/api/lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).then(function (r) {
+      if (!r.ok) throw new Error('http ' + r.status);
+      return r.json().catch(function () { return {}; });
+    });
+  }
+
+  leadForm.addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    clearError();
+
+    // Honeypot: se preenchido, finge sucesso e não envia nada.
+    if ($('leadWebsite').value.trim() !== '') { showSuccess(false); return; }
+
+    var nome = $('leadNome').value.trim();
+    var email = $('leadEmail').value.trim();
+    var empresa = $('leadEmpresa').value.trim();
+
+    if (!nome) { showError('Informe seu nome.'); $('leadNome').focus(); return; }
+    if (!EMAIL_RE.test(email)) { showError('Informe um e-mail válido.'); $('leadEmail').focus(); return; }
+
+    var valor = digitsToNum(leadValor.dataset.num || leadValor.value) || state.vn;
+    var payload = {
+      nome: nome,
+      email: email,
+      empresa: empresa,
+      valor_credito: valor,
+      simulacao: {
+        vn: state.vn,
+        rating: state.rating,
+        i: state.i / 100, // fração decimal, mesma convenção da API
+        T: state.T,
+        fair_value: lastResult ? Math.round(lastResult.fv * 100) / 100 : 0,
+        desagio_justo: lastResult ? lastResult.d : 0
+      },
+      website: ''
+    };
+
+    var btn = $('leadSubmit');
+    btn.disabled = true;
+    btn.textContent = 'Enviando…';
+
+    postLead(payload)
+      .then(function () { showSuccess(false); })
+      .catch(function () { queueLead(payload); showSuccess(true); })
+      .then(function () {
+        btn.disabled = false;
+        btn.textContent = 'Quero a análise completa';
+      });
+  });
+
+  /* ============ Reenvio da fila offline ============ */
+  function flushQueue() {
+    var q;
+    try { q = JSON.parse(localStorage.getItem(LEAD_QUEUE_KEY) || '[]'); } catch (e) { return; }
+    if (!q.length) return;
+    var remaining = [];
+    q.reduce(function (p, item) {
+      return p.then(function () {
+        return postLead(item).catch(function () { remaining.push(item); });
+      });
+    }, Promise.resolve()).then(function () {
+      try {
+        if (remaining.length) localStorage.setItem(LEAD_QUEUE_KEY, JSON.stringify(remaining));
+        else localStorage.removeItem(LEAD_QUEUE_KEY);
+      } catch (e) {}
+    });
+  }
+
+  /* ============ Reveal on scroll ============ */
+  var reducedMotion = window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.body.classList.add('fx');
+  var rvEls = document.querySelectorAll('.rv');
+  for (var r = 0; r < rvEls.length; r++) {
+    var rvEl = rvEls[r];
+    // stagger leve entre irmãos revelados juntos
+    var sibs = rvEl.parentElement ? rvEl.parentElement.children : [];
+    var idx = 0;
+    for (var s = 0; s < sibs.length; s++) {
+      if (sibs[s] === rvEl) break;
+      if (sibs[s].classList && sibs[s].classList.contains('rv')) idx++;
+    }
+    rvEl.style.transitionDelay = Math.min(idx * 70, 280) + 'ms';
+  }
+  if (reducedMotion || !('IntersectionObserver' in window)) {
+    for (var r2 = 0; r2 < rvEls.length; r2++) rvEls[r2].classList.add('in');
+  } else {
+    var io = new IntersectionObserver(function (entries) {
+      for (var n = 0; n < entries.length; n++) {
+        if (entries[n].isIntersecting) {
+          entries[n].target.classList.add('in');
+          io.unobserve(entries[n].target);
+        }
+      }
+    }, { threshold: 0.1, rootMargin: '0px 0px -6% 0px' });
+    for (var r3 = 0; r3 < rvEls.length; r3++) io.observe(rvEls[r3]);
+  }
+
+  /* ============ Init ============ */
+  onSim(false);   // render inicial + conferência silenciosa
+  flushQueue();   // tenta reenviar leads guardados offline
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "kilo-passaporte-worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Kilo · Passaporte Fiscal — Worker Cloudflare (API /api/* + landing via Static Assets + motor determinístico). Deploy: ../docs/DEPLOY.md",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "migrate": "wrangler d1 migrations apply kilo-passaporte --remote",
+    "genkey": "node scripts/genkey.mjs",
+    "test": "node test/run.test.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "^4"
+  }
+}

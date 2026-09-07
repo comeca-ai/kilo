@@ -1,0 +1,69 @@
+# wrangler.toml — configuração real de deploy do Worker "kilo-passaporte".
+#
+# Unidade deployável: este diretório (worker/) sobe inteiro com UM comando:
+#   npm run deploy          (equivale a: wrangler deploy)
+#
+# Pré-requisitos (passo a passo completo em ../docs/DEPLOY.md):
+#   1. wrangler login
+#   2. wrangler d1 create kilo-passaporte   → colar o database_id abaixo
+#   3. wrangler d1 migrations apply kilo-passaporte --remote
+#   4. wrangler secret put SIGNING_KEY_JWK  (chave NUNCA vai neste arquivo)
+
+name = "kilo-passaporte"
+main = "src/index.js"
+compatibility_date = "2025-09-01"
+
+# ---------------------------------------------------------------------------
+# Static Assets (Workers Static Assets — wrangler v3.78+ / v4).
+# Comportamento de roteamento (default, sem flags extras):
+#   - se o caminho casa um arquivo de ./public (ex.: "/" → public/index.html),
+#     o asset é servido direto pela borda, SEM invocar o Worker;
+#   - se NÃO casa asset (ex.: qualquer /api/*), a requisição cai no fetch do
+#     Worker — é exatamente o que queremos: landing estática + API no mesmo
+#     domínio.
+# Métodos não-GET/HEAD (POST /api/...) nunca casam asset: vão direto ao Worker.
+# Docs: https://developers.cloudflare.com/workers/static-assets/routing/
+# ---------------------------------------------------------------------------
+[assets]
+directory = "./public"
+
+# ---------------------------------------------------------------------------
+# Banco D1 (leads + rate limit).
+# Crie com:   wrangler d1 create kilo-passaporte
+# Migre com:  wrangler d1 migrations apply kilo-passaporte --remote
+# ---------------------------------------------------------------------------
+[[d1_databases]]
+binding = "DB"
+database_name = "kilo-passaporte"
+database_id = "COLE_AQUI_O_ID" # <- substitua pelo id retornado no `d1 create`
+migrations_dir = "migrations"
+
+[vars]
+# Allowlist de origens para CORS, separada por vírgula.
+# "*" funciona para começar; em produção troque pelos domínios próprios:
+#   ALLOWED_ORIGINS = "https://seudominio.com.br,https://www.seudominio.com.br"
+ALLOWED_ORIGINS = "*"
+
+# Logs de produção no dashboard/Wrangler tail (Workers Logs).
+[observability]
+enabled = true
+
+# ---------------------------------------------------------------------------
+# Chave de assinatura Ed25519 — NUNCA neste arquivo. Use secret:
+#   node scripts/genkey.mjs          # gera o par e imprime o JWK privado
+#   wrangler secret put SIGNING_KEY_JWK
+# (cole o JSON do JWK privado, uma única linha)
+#
+# Rotação (opcional): durante a janela de troca, mantenha a chave anterior em
+#   wrangler secret put SIGNING_KEY_JWK_PREVIOUS
+# para que /api/verify continue aceitando passaportes assinados com ela.
+# Detalhes em ../docs/RUNBOOK-CHAVE.md.
+# ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# Domínio próprio (opcional, ver ../docs/DEPLOY.md §"Domínio próprio"):
+# workers_dev = false
+# [[routes]]
+# pattern = "seudominio.com.br"
+# custom_domain = true
+# ---------------------------------------------------------------------------
