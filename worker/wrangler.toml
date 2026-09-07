@@ -12,6 +12,8 @@
 name = "kilo-passaporte"
 main = "src/index.js"
 compatibility_date = "2025-09-01"
+# Responde no domínio próprio (kilo.ia.br) E no *.workers.dev (links de demo).
+workers_dev = true
 
 # ---------------------------------------------------------------------------
 # Static Assets (Workers Static Assets — wrangler v3.78+ / v4).
@@ -61,9 +63,13 @@ enabled = true
 # ---------------------------------------------------------------------------
 
 # ---------------------------------------------------------------------------
-# Domínio próprio (opcional, ver ../docs/DEPLOY.md §"Domínio próprio"):
-# workers_dev = false
-# [[routes]]
-# pattern = "seudominio.com.br"
-# custom_domain = true
+# Domínio próprio: kilo.ia.br (zona ativa na conta; Custom Domain do Workers —
+# SSL e DNS são provisionados automaticamente no deploy).
+# workers_dev continua ativo: o worker responde nos DOIS endereços
+# (kilo.ia.br e kilo-passaporte.jhonata-emerick.workers.dev).
+# Para servir SÓ no domínio próprio: descomente workers_dev = false.
+# ---------------------------------------------------------------------------
+[[routes]]
+pattern = "kilo.ia.br"
+custom_domain = true
 # ---------------------------------------------------------------------------
