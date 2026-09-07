@@ -45,6 +45,15 @@ import {
   isClosingKind,
 } from '../src/closing.js';
 import { buildPassaporte } from '../src/passport.js';
+import worker from '../src/index.js';
+import {
+  hashPassword,
+  verifyPassword,
+  getSessionToken,
+  sessionCookie,
+  clearSessionCookie,
+  SESSION_TTL_MS,
+} from '../src/auth.js';
 
 const RAIZ = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURES = path.join(RAIZ, 'fixtures');
@@ -540,4 +549,291 @@ test('REPRODUTIBILIDADE: 2 execuções → output_hash idêntico (casos A e C)',
       canonicalStringify(r2.dossier)
     );
   }
+});
+
+/* ------------------------------------------------------------------------ */
+/* auth.js — hash de senha e token de sessão (puros, sem D1)                 */
+/* ------------------------------------------------------------------------ */
+
+test('hashPassword: formato pbkdf2$sha256$100000$<salt>$<hash> (teto Workers) e salt aleatório', async () => {
+  const h1 = await hashPassword('senha-forte-123');
+  const h2 = await hashPassword('senha-forte-123');
+  assert.match(h1, /^pbkdf2\$sha256\$100000\$[A-Za-z0-9+/=]+\$[A-Za-z0-9+/=]+$/);
+  // Mesma senha → hashes diferentes (salt de 16 bytes aleatório por hash)
+  assert.notEqual(h1, h2);
+});
+
+test('verifyPassword: aceita a senha certa e recusa a errada', async () => {
+  const stored = await hashPassword('correta-456');
+  assert.equal(await verifyPassword('correta-456', stored), true);
+  assert.equal(await verifyPassword('errada-456', stored), false);
+});
+
+test('verifyPassword: formato inválido → false, sem throw', async () => {
+  assert.equal(await verifyPassword('x', 'não-é-um-hash'), false);
+  assert.equal(await verifyPassword('x', 'pbkdf2$md5$100000$AAAA$BBBB'), false);
+  assert.equal(await verifyPassword('x', 'pbkdf2$sha256$abc$AAAA$BBBB'), false);
+  assert.equal(await verifyPassword('x', 'pbkdf2$sha256$100000$@@@$BBBB'), false);
+  assert.equal(await verifyPassword('x', null), false);
+  assert.equal(await verifyPassword('x', undefined), false);
+});
+
+test('getSessionToken: cookie kilo_session, Bearer e ausência', () => {
+  const viaCookie = new Request('https://t.local/api/me', {
+    headers: { Cookie: 'a=1; kilo_session=tok-abc; b=2' },
+  });
+  assert.equal(getSessionToken(viaCookie), 'tok-abc');
+  const viaBearer = new Request('https://t.local/api/me', {
+    headers: { Authorization: 'Bearer tok-xyz' },
+  });
+  assert.equal(getSessionToken(viaBearer), 'tok-xyz');
+  // cookie tem precedência sobre Bearer
+  const ambos = new Request('https://t.local/api/me', {
+    headers: { Cookie: 'kilo_session=tok-cookie', Authorization: 'Bearer tok-bearer' },
+  });
+  assert.equal(getSessionToken(ambos), 'tok-cookie');
+  assert.equal(getSessionToken(new Request('https://t.local/api/me')), null);
+});
+
+test('sessionCookie/clearSessionCookie: flags de segurança presentes', () => {
+  const c = sessionCookie('tok123');
+  assert.ok(c.includes('kilo_session=tok123'));
+  assert.ok(c.includes('HttpOnly'));
+  assert.ok(c.includes('Secure'));
+  assert.ok(c.includes('SameSite=Lax'));
+  assert.ok(c.includes('Max-Age=604800'));
+  assert.equal(SESSION_TTL_MS, 7 * 24 * 60 * 60 * 1000);
+  const clear = clearSessionCookie();
+  assert.ok(clear.includes('kilo_session=;'));
+  assert.ok(clear.includes('Max-Age=0'));
+});
+
+/* ------------------------------------------------------------------------ */
+/* Autenticação v1 — e2e do Worker com mockD1() em memória                   */
+/* ------------------------------------------------------------------------ */
+
+// Mock de teste: D1 mínimo em memória (arrays), ESPECIALIZADO por substring do
+// SQL — cobre apenas as operações de src/authdb.js (INSERT/SELECT users,
+// INSERT/SELECT-JOIN/DELETE sessions). Não é um SQLite genérico: SQL fora
+// desse conjunto lança erro (ex.: o SQL de rate_limits cai no catch do
+// checkRateLimit, que degrada para o fallback em memória — ver ratelimit.js).
+function mockD1() {
+  const users = []; // { id, org_id, nome, email, senha_hash, created_at, updated_at }
+  const sessions = []; // { token_hash, user_id, created_at, expires_at, ip, user_agent }
+
+  function run(sql, args) {
+    if (sql.startsWith('INSERT INTO users')) {
+      // UNIQUE(users.email), como na migration 0003
+      if (users.some((u) => u.email === args[3])) {
+        throw new Error('UNIQUE constraint failed: users.email');
+      }
+      users.push({
+        id: args[0], org_id: args[1], nome: args[2], email: args[3],
+        senha_hash: args[4], created_at: args[5], updated_at: args[6],
+      });
+      return { changes: 1 };
+    }
+    if (sql.startsWith('INSERT INTO sessions')) {
+      sessions.push({
+        token_hash: args[0], user_id: args[1], created_at: args[2],
+        expires_at: args[3], ip: args[4], user_agent: args[5],
+      });
+      return { changes: 1 };
+    }
+    if (sql.startsWith('DELETE FROM sessions WHERE expires_at')) {
+      const antes = sessions.length;
+      for (let i = sessions.length - 1; i >= 0; i--) {
+        if (sessions[i].expires_at < args[0]) sessions.splice(i, 1);
+      }
+      return { changes: antes - sessions.length };
+    }
+    if (sql.startsWith('DELETE FROM sessions WHERE token_hash')) {
+      const antes = sessions.length;
+      for (let i = sessions.length - 1; i >= 0; i--) {
+        if (sessions[i].token_hash === args[0]) sessions.splice(i, 1);
+      }
+      return { changes: antes - sessions.length };
+    }
+    throw new Error('mockD1: SQL não suportado (run): ' + sql);
+  }
+
+  function first(sql, args) {
+    if (sql.includes('FROM users') && !sql.includes('JOIN')) {
+      return users.find((u) => u.email === args[0]) || null;
+    }
+    if (sql.includes('FROM sessions') && sql.includes('JOIN')) {
+      const s = sessions.find((x) => x.token_hash === args[0]);
+      if (!s) return null;
+      const u = users.find((x) => x.id === s.user_id);
+      if (!u) return null;
+      return { expires_at: s.expires_at, id: u.id, org_id: u.org_id, nome: u.nome, email: u.email };
+    }
+    throw new Error('mockD1: SQL não suportado (first): ' + sql);
+  }
+
+  return {
+    prepare(sql) {
+      return {
+        bind(...args) {
+          return { run: async () => run(sql, args), first: async () => first(sql, args) };
+        },
+      };
+    },
+  };
+}
+
+// Chama o Worker como a borda faria (fetch do handler, passando pelo withCors).
+function callApi(env, method, path, { body, headers = {} } = {}) {
+  const req = new Request('https://teste.local' + path, {
+    method,
+    headers: { 'content-type': 'application/json', ...headers },
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+  return worker.fetch(req, env, {});
+}
+
+const CADASTRO = {
+  nome: 'Maria Silva',
+  email: 'Maria@Empresa.com.br',
+  senha: 'senha-forte-123',
+  org_id: 'cnpj_11222333000181',
+};
+
+test('auth e2e: register 201 com Set-Cookie → /api/me com cookie → 200', async () => {
+  const env = { DB: mockD1() };
+  const res = await worker.fetch(
+    new Request('https://teste.local/api/auth/register', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(CADASTRO),
+    }),
+    env,
+    {}
+  );
+  assert.equal(res.status, 201);
+  const data = await res.json();
+  assert.match(data.user.id, /^usr_/);
+  // e-mail normalizado (trim + lowercase) e senha_hash NUNCA exposto
+  assert.equal(data.user.email, 'maria@empresa.com.br');
+  assert.equal(data.user.org_id, CADASTRO.org_id);
+  assert.equal('senha_hash' in data.user, false);
+  assert.equal(typeof data.session_token, 'string');
+  assert.equal(typeof data.session_expires_at, 'string');
+  // cookie sobrevive ao wrapper withCors (que copia os headers)
+  const setCookie = res.headers.get('set-cookie');
+  assert.ok(setCookie && setCookie.includes('kilo_session=' + data.session_token));
+  assert.ok(setCookie.includes('HttpOnly'));
+
+  const me = await callApi(env, 'GET', '/api/me', {
+    headers: { Cookie: 'kilo_session=' + data.session_token },
+  });
+  assert.equal(me.status, 200);
+  const meData = await me.json();
+  assert.equal(meData.user.email, 'maria@empresa.com.br');
+  assert.equal(meData.session_expires_at, data.session_expires_at);
+
+  // Bearer também funciona
+  const meBearer = await callApi(env, 'GET', '/api/me', {
+    headers: { Authorization: 'Bearer ' + data.session_token },
+  });
+  assert.equal(meBearer.status, 200);
+});
+
+test('auth e2e: login com senha errada → 401 AUTH_FAILED; correta → 200', async () => {
+  const env = { DB: mockD1() };
+  const reg = await callApi(env, 'POST', '/api/auth/register', { body: CADASTRO });
+  assert.equal(reg.status, 201);
+
+  const errada = await callApi(env, 'POST', '/api/auth/login', {
+    body: { email: CADASTRO.email, senha: 'senha-errada-1' },
+  });
+  assert.equal(errada.status, 401);
+  assert.equal((await errada.json()).error.code, 'AUTH_FAILED');
+
+  // usuário inexistente: MESMA resposta (anti-enumeração)
+  const inexistente = await callApi(env, 'POST', '/api/auth/login', {
+    body: { email: 'ninguem@empresa.com.br', senha: 'senha-errada-1' },
+  });
+  assert.equal(inexistente.status, 401);
+  assert.equal((await inexistente.json()).error.code, 'AUTH_FAILED');
+
+  const certa = await callApi(env, 'POST', '/api/auth/login', {
+    body: { email: 'maria@empresa.com.br', senha: CADASTRO.senha },
+  });
+  assert.equal(certa.status, 200);
+  const loginData = await certa.json();
+  assert.equal(loginData.user.email, 'maria@empresa.com.br');
+  assert.equal(typeof loginData.session_token, 'string');
+  assert.ok((certa.headers.get('set-cookie') || '').includes('kilo_session='));
+
+  // formato inválido → 400
+  const semSenha = await callApi(env, 'POST', '/api/auth/login', {
+    body: { email: CADASTRO.email },
+  });
+  assert.equal(semSenha.status, 400);
+  assert.equal((await semSenha.json()).error.code, 'INVALID_CREDENTIALS_FORMAT');
+});
+
+test('auth e2e: register com mesmo e-mail → 409 EMAIL_TAKEN', async () => {
+  const env = { DB: mockD1() };
+  const r1 = await callApi(env, 'POST', '/api/auth/register', { body: CADASTRO });
+  assert.equal(r1.status, 201);
+  // mesmo e-mail normalizado (case-insensitive)
+  const r2 = await callApi(env, 'POST', '/api/auth/register', {
+    body: { ...CADASTRO, email: 'MARIA@empresa.com.br' },
+  });
+  assert.equal(r2.status, 409);
+  assert.equal((await r2.json()).error.code, 'EMAIL_TAKEN');
+});
+
+test('auth e2e: validações 400 do register', async () => {
+  const env = { DB: mockD1() };
+  const senhaFraca = await callApi(env, 'POST', '/api/auth/register', {
+    body: { ...CADASTRO, senha: 'curta' },
+  });
+  assert.equal(senhaFraca.status, 400);
+  assert.equal((await senhaFraca.json()).error.code, 'AUTH_WEAK_PASSWORD');
+
+  const semOrg = await callApi(env, 'POST', '/api/auth/register', {
+    body: { ...CADASTRO, org_id: '' },
+  });
+  assert.equal(semOrg.status, 400);
+
+  const emailRuim = await callApi(env, 'POST', '/api/auth/register', {
+    body: { ...CADASTRO, email: 'sem-arroba' },
+  });
+  assert.equal(emailRuim.status, 400);
+});
+
+test('auth e2e: logout → 200 e /api/me depois → 401 AUTH_REQUIRED', async () => {
+  const env = { DB: mockD1() };
+  const reg = await callApi(env, 'POST', '/api/auth/register', { body: CADASTRO });
+  const { session_token } = await reg.json();
+
+  const logout = await callApi(env, 'POST', '/api/auth/logout', {
+    headers: { Cookie: 'kilo_session=' + session_token },
+  });
+  assert.equal(logout.status, 200);
+  assert.deepEqual(await logout.json(), { ok: true });
+  const clearCookie = logout.headers.get('set-cookie');
+  assert.ok(clearCookie && clearCookie.includes('Max-Age=0'));
+
+  const me = await callApi(env, 'GET', '/api/me', {
+    headers: { Cookie: 'kilo_session=' + session_token },
+  });
+  assert.equal(me.status, 401);
+  assert.equal((await me.json()).error.code, 'AUTH_REQUIRED');
+
+  // logout sem token também é 200 (idempotente)
+  const logoutSemToken = await callApi(env, 'POST', '/api/auth/logout');
+  assert.equal(logoutSemToken.status, 200);
+});
+
+test('auth e2e: sem binding D1 → 503 AUTH_UNAVAILABLE', async () => {
+  const reg = await callApi({}, 'POST', '/api/auth/register', { body: CADASTRO });
+  assert.equal(reg.status, 503);
+  assert.equal((await reg.json()).error.code, 'AUTH_UNAVAILABLE');
+
+  const me = await callApi({}, 'GET', '/api/me');
+  assert.equal(me.status, 503);
 });

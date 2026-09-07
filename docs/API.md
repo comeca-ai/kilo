@@ -28,6 +28,10 @@ Convenções gerais:
 | `/api/verify`       | POST   | 60/min  |
 | `/api/lead`         | POST   | 10/min  |
 | `/api/scan`         | POST   | 10/min  |
+| `/api/auth/register` | POST  | 10/min  |
+| `/api/auth/login`   | POST   | 10/min  |
+| `/api/auth/logout`  | POST   | 120/min |
+| `/api/me`           | GET    | 120/min |
 
 ---
 
@@ -428,6 +432,89 @@ gravação — "Captura temporariamente indisponível."). IP e user-agent são g
 
 ---
 
+## Autenticação (v1)
+
+Cadastro/login/sessão do portal do cliente, persistidos no D1 (`users`/`sessions`,
+migration `0003_auth.sql`). **Nesta fase nenhuma rota existente exige sessão** — o
+`/api/passaporte` segue aberto.
+
+- **Senha**: PBKDF2-SHA256 com **100.000 iterações** (teto do WebCrypto no runtime Workers) e salt aleatório de 16 bytes,
+  gravada como `pbkdf2$sha256$<iter>$<salt_b64>$<hash_b64>` (ver `src/auth.js`).
+  A senha nunca é gravada em claro e `senha_hash` nunca sai em resposta.
+- **Sessão**: token opaco de 32 bytes (base64url), TTL de **7 dias**. Em repouso
+  só fica o **SHA-256 hex do token** (`sessions.token_hash`) — o token puro nunca
+  é persistido. Login/registro também fazem limpeza oportunista de sessões expiradas.
+- **Transporte do token**: o servidor responde com o cookie
+  `kilo_session=<token>; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=604800`
+  **e** com `session_token` no corpo JSON. Nas chamadas seguintes, use o cookie
+  (browser) **ou** o header `Authorization: Bearer <token>` (clientes não-browser);
+  o cookie tem precedência quando ambos existem.
+- **E-mail**: normalizado com `trim` + `lowercase` antes de gravar/comparar; o
+  cadastro duplicado (case-insensitive) retorna `409 EMAIL_TAKEN`.
+
+### POST /api/auth/register
+
+```bash
+curl -X POST https://<worker>/api/auth/register \
+  -H 'content-type: application/json' \
+  -d '{"nome": "Maria Silva", "email": "maria@empresa.com.br",
+       "senha": "senha-forte-123", "org_id": "cnpj_12345678000190"}'
+```
+
+`201` (com `Set-Cookie: kilo_session=...`):
+
+```json
+{
+  "user": {"id": "usr_<26 base32>", "org_id": "cnpj_12345678000190",
+           "nome": "Maria Silva", "email": "maria@empresa.com.br",
+           "created_at": "<ISO>"},
+  "session_token": "<base64url>",
+  "session_expires_at": "<ISO +7d>"
+}
+```
+
+| Campo    | Regra                                                        |
+| -------- | ------------------------------------------------------------ |
+| `nome`   | obrigatório, string com ≥ 2 caracteres (após trim)           |
+| `email`  | obrigatório, formato `local@dominio.tld`                     |
+| `senha`  | obrigatória, string com ≥ 8 caracteres                       |
+| `org_id` | obrigatório, string não vazia (será o `holder_org_id` dos passaportes) |
+
+Erros: `400 INVALID_NOME` / `INVALID_EMAIL` / `AUTH_WEAK_PASSWORD` / `INVALID_ORG_ID`
+(com `field`), `409 EMAIL_TAKEN`, `503 AUTH_UNAVAILABLE` (binding D1 ausente).
+
+### POST /api/auth/login
+
+```bash
+curl -X POST https://<worker>/api/auth/login \
+  -H 'content-type: application/json' \
+  -d '{"email": "maria@empresa.com.br", "senha": "senha-forte-123"}'
+```
+
+`200` com o mesmo envelope do register (`user` + `session_token` + `session_expires_at`
++ `Set-Cookie`). **Anti-enumeração**: e-mail inexistente e senha errada retornam a
+**mesma** resposta `401 AUTH_FAILED` ("Credenciais inválidas."), e o servidor deriva
+PBKDF2 contra um hash dummy fixo quando o e-mail não existe para equalizar o tempo.
+Campos ausentes/não-string → `400 INVALID_CREDENTIALS_FORMAT`.
+
+### POST /api/auth/logout
+
+Invalida a sessão atual (cookie ou Bearer) e responde `200 {"ok": true}` com
+`Set-Cookie: kilo_session=; ...; Max-Age=0`. Idempotente: sem token → `200 {"ok": true}`
+mesmo assim.
+
+### GET /api/me
+
+```bash
+curl https://<worker>/api/me -H 'Cookie: kilo_session=<token>'
+# ou: -H 'Authorization: Bearer <token>'
+```
+
+`200`: `{"user": {"id", "org_id", "nome", "email"}, "session_expires_at": "<ISO>"}`.
+Sessão ausente/expirada → `401 AUTH_REQUIRED` ("Sessão ausente ou expirada.").
+
+---
+
 ## Códigos de erro
 
 | Código                | HTTP | Onde                                              |
@@ -446,6 +533,15 @@ gravação — "Captura temporariamente indisponível."). IP e user-agent são g
 | `PAYLOAD_TOO_LARGE`   | 413  | `/api/scan` (corpo > 2 MB)                        |
 | `INVALID_JSON`        | 400  | todos os POSTs                                    |
 | `RATE_LIMITED`        | 429  | todas (+ header `Retry-After`)                    |
+| `INVALID_NOME`        | 400  | `/api/auth/register`                              |
+| `INVALID_EMAIL`       | 400  | `/api/auth/register`                              |
+| `AUTH_WEAK_PASSWORD`  | 400  | `/api/auth/register` (senha < 8 caracteres)       |
+| `INVALID_ORG_ID`      | 400  | `/api/auth/register`                              |
+| `EMAIL_TAKEN`         | 409  | `/api/auth/register`                              |
+| `INVALID_CREDENTIALS_FORMAT` | 400 | `/api/auth/login`                      |
+| `AUTH_FAILED`         | 401  | `/api/auth/login` (mesma resposta p/ e-mail inexistente e senha errada) |
+| `AUTH_REQUIRED`       | 401  | `/api/me` (sessão ausente ou expirada)            |
+| `AUTH_UNAVAILABLE`    | 503  | rotas `/api/auth/*` e `/api/me` (binding D1 ausente) |
 | `NO_SIGNING_KEY`      | 503  | `/api/pubkey`, `/api/passaporte`, `/api/verify`   |
 | `LEADS_UNAVAILABLE`   | 503  | `/api/lead`                                       |
 | `METHOD_NOT_ALLOWED`  | 405  | rota conhecida, método errado                     |

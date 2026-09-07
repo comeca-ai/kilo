@@ -34,6 +34,20 @@ import {
 } from './passport.js';
 import { randomBase32 } from './canonical.js';
 import { CLOSING_CHECKLIST, CLOSING_CHECKLIST_HASH } from './closing.js';
+import {
+  hashPassword,
+  verifyPassword,
+  getSessionToken,
+  sessionCookie,
+  clearSessionCookie,
+} from './auth.js';
+import {
+  createUser,
+  findUserByEmail,
+  createSession,
+  getUserBySession,
+  deleteSession,
+} from './authdb.js';
 
 // Limites por rota (requisições/minuto, janela fixa por IP). Demais rotas: 120/min.
 const RATE_LIMITS = {
@@ -42,6 +56,8 @@ const RATE_LIMITS = {
   'POST /api/passaporte': 10,
   'POST /api/scan': 10,
   'POST /api/verify': 60,
+  'POST /api/auth/register': 10,
+  'POST /api/auth/login': 10,
 };
 const DEFAULT_RATE_LIMIT = 120;
 
@@ -97,7 +113,7 @@ function handleOptions(corsOrigin) {
     if (corsOrigin !== '*') headers.set('Vary', 'Origin');
   }
   headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  headers.set('Access-Control-Allow-Headers', 'content-type');
+  headers.set('Access-Control-Allow-Headers', 'content-type, authorization'); // authorization: Bearer p/ sessão cross-origin
   headers.set('Access-Control-Max-Age', '86400');
   return new Response(null, { status: 204, headers });
 }
@@ -123,6 +139,10 @@ async function route(request, env, ctx, corsOrigin) {
     'POST /api/verify': handleVerify,
     'POST /api/lead': handleLead,
     'POST /api/scan': handleScan,
+    'POST /api/auth/register': handleAuthRegister,
+    'POST /api/auth/login': handleAuthLogin,
+    'POST /api/auth/logout': handleAuthLogout,
+    'GET /api/me': handleMe,
   };
 
   const handler = HANDLERS[routeKey];
@@ -352,4 +372,117 @@ async function handleLead(request, env) {
   }
 
   return jsonResponse({ id }, 201);
+}
+
+// ---------------------------------------------------------------------------
+// Autenticação v1 (portal do cliente) — users/sessions no D1 (0003_auth.sql).
+// Senha: PBKDF2-SHA256 100k — teto do runtime (src/auth.js). Sessão: token opaco, gravado só
+// como hash. O cookie Set-Cookie é anexado DEPOIS do jsonResponse (append) —
+// o wrapper withCors copia os headers, então o cookie sobrevive.
+// ---------------------------------------------------------------------------
+
+function authUnavailable() {
+  return errorResponse(503, 'AUTH_UNAVAILABLE', 'Autenticação temporariamente indisponível.');
+}
+
+// POST /api/auth/register — cadastro + sessão imediata (201).
+async function handleAuthRegister(request, env) {
+  if (!env.DB) return authUnavailable();
+
+  const parsed = await parseJsonBody(request);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.value;
+
+  if (typeof body.nome !== 'string' || body.nome.trim().length < 2) {
+    return errorResponse(400, 'INVALID_NOME', 'Informe seu nome (mínimo de 2 caracteres).', 'nome');
+  }
+  if (!isValidEmail(body.email)) {
+    return errorResponse(400, 'INVALID_EMAIL', 'Informe um e-mail válido.', 'email');
+  }
+  if (typeof body.senha !== 'string' || body.senha.length < 8) {
+    return errorResponse(400, 'AUTH_WEAK_PASSWORD', 'Senha deve ter ao menos 8 caracteres.', 'senha');
+  }
+  if (!isNonEmptyString(body.org_id)) {
+    return errorResponse(400, 'INVALID_ORG_ID', 'Informe org_id (identificador da organização).', 'org_id');
+  }
+
+  const email = body.email.trim().toLowerCase();
+  const senhaHash = await hashPassword(body.senha);
+  const created = await createUser(env, {
+    org_id: body.org_id.trim(),
+    nome: body.nome.trim(),
+    email,
+    senha_hash: senhaHash,
+  });
+  if (!created.ok) {
+    // createUser padroniza conflito de UNIQUE como { ok: false, code: 'EMAIL_TAKEN' }.
+    return errorResponse(409, 'EMAIL_TAKEN', 'E-mail já cadastrado.', 'email');
+  }
+
+  const session = await createSession(env, created.user.id, request);
+  const res = jsonResponse(
+    { user: created.user, session_token: session.token, session_expires_at: session.expires_at },
+    201
+  );
+  res.headers.append('Set-Cookie', sessionCookie(session.token));
+  return res;
+}
+
+// Hash dummy fixo (formato válido) para equalizar o custo de PBKDF2 quando o
+// e-mail não existe — anti-enumeração: usuário inexistente e senha errada
+// têm a MESMA resposta e custo de hash parecido.
+const DUMMY_PASSWORD_HASH =
+  'pbkdf2$sha256$100000$AAAAAAAAAAAAAAAAAAAAAA==$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
+
+// POST /api/auth/login — credenciais → sessão (200).
+async function handleAuthLogin(request, env) {
+  if (!env.DB) return authUnavailable();
+
+  const parsed = await parseJsonBody(request);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.value;
+
+  if (typeof body.email !== 'string' || typeof body.senha !== 'string') {
+    return errorResponse(400, 'INVALID_CREDENTIALS_FORMAT', 'Informe e-mail e senha.');
+  }
+
+  const email = body.email.trim().toLowerCase();
+  const user = await findUserByEmail(env, email);
+  const ok = await verifyPassword(body.senha, user ? user.senha_hash : DUMMY_PASSWORD_HASH);
+  if (!user || !ok) {
+    return errorResponse(401, 'AUTH_FAILED', 'Credenciais inválidas.');
+  }
+
+  const session = await createSession(env, user.id, request);
+  const res = jsonResponse({
+    user: { id: user.id, org_id: user.org_id, nome: user.nome, email: user.email },
+    session_token: session.token,
+    session_expires_at: session.expires_at,
+  });
+  res.headers.append('Set-Cookie', sessionCookie(session.token));
+  return res;
+}
+
+// POST /api/auth/logout — invalida a sessão (se houver) e expira o cookie.
+// Sem token → 200 { ok: true } mesmo assim (logout é idempotente).
+async function handleAuthLogout(request, env) {
+  if (!env.DB) return authUnavailable();
+
+  const token = getSessionToken(request);
+  if (token) await deleteSession(env, token);
+  const res = jsonResponse({ ok: true });
+  res.headers.append('Set-Cookie', clearSessionCookie());
+  return res;
+}
+
+// GET /api/me — dados do usuário da sessão (cookie kilo_session ou Bearer).
+async function handleMe(request, env) {
+  if (!env.DB) return authUnavailable();
+
+  const token = getSessionToken(request);
+  const session = token ? await getUserBySession(env, token) : null;
+  if (!session) {
+    return errorResponse(401, 'AUTH_REQUIRED', 'Sessão ausente ou expirada.');
+  }
+  return jsonResponse({ user: session.user, session_expires_at: session.expires_at });
 }
