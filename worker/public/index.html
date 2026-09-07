@@ -7,7 +7,8 @@
 <meta name="description" content="Simule o deságio justo do seu crédito acumulado de ICMS (rota CAT 42/SP) e veja o que a LC 214/2025 faz com quem não homologar até a transição. Calculadora grátis.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,900;1,400&family=IBM+Plex+Mono:wght@500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,900;1,400&family=IBM+Plex+Mono:wght@500;600&display=swap"></noscript>
 <style>
 /* ============ Reset & tokens ============ */
 *,*::before,*::after{box-sizing:border-box}
@@ -29,6 +30,7 @@
   --line-d-strong:rgba(245,239,224,.32);
   --line-l:rgba(46,42,32,.20);
   --line-l-strong:rgba(46,42,32,.38);
+  --sans:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   --serif:"Fraunces",Georgia,"Times New Roman",serif;
   --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   --ease:cubic-bezier(0.22,1,0.36,1);
@@ -37,8 +39,7 @@
 html{scroll-behavior:smooth}
 body{
   margin:0;
-  font-family:var(--serif);
-  font-optical-sizing:auto;
+  font-family:var(--sans);
   font-weight:400;
   font-size:17px;
   line-height:1.72;
@@ -55,6 +56,14 @@ a{color:inherit}
 button{font:inherit}
 :focus-visible{outline:1px solid var(--amber);outline-offset:4px}
 .light :focus-visible{outline-color:var(--amber-ink)}
+.skip-link{
+  position:absolute;left:16px;top:12px;z-index:250;
+  padding:10px 14px;background:var(--paper);color:var(--ink);
+  border:1px solid var(--amber-ink);text-decoration:none;
+  transform:translateY(-140%);transition:transform .2s ease;
+  font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;
+}
+.skip-link:focus{transform:translateY(0)}
 
 .wrap{max-width:var(--maxw);margin:0 auto;padding:0 clamp(20px,4vw,40px)}
 .dark{background:var(--ink);color:var(--tx-d)}
@@ -89,7 +98,7 @@ button{font:inherit}
 }
 .dark .h2{color:var(--tx-d-strong)}
 .light .h2{color:var(--tx-l)}
-.lead-p{font-size:clamp(1.02rem,1.4vw,1.16rem);font-weight:340;line-height:1.75;max-width:60ch;margin-top:22px}
+.lead-p{font-family:var(--sans);font-size:clamp(1.02rem,1.8vw,1.16rem);line-height:1.72;max-width:60ch;margin-top:22px}
 .mono{font-family:var(--mono)}
 .tabular{font-variant-numeric:tabular-nums}
 
@@ -194,13 +203,12 @@ button{font:inherit}
 .sim-section{padding:clamp(64px,8vw,104px) 0;scroll-margin-top:70px}
 .sim-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:18px 32px}
 .sim-head .lead-p{margin-top:14px}
-.sim-grid{display:grid;gap:26px;margin-top:48px}
+.sim-grid{display:grid;gap:26px;margin-top:48px;grid-template-areas:"lead" "calc"}
 @media (min-width:960px){
-  .sim-grid{grid-template-columns:7fr 5fr;align-items:start}
+  .sim-grid{grid-template-columns:7fr 5fr;grid-template-areas:"calc lead";align-items:start}
 }
 @media (max-width:959.98px){
-  .lead-card{display:none}
-  body.has-sim .lead-card{display:block}
+  .sim-head{align-items:flex-start}
 }
 
 /* ============ Calculadora (peça central) ============ */
@@ -209,6 +217,7 @@ button{font:inherit}
   background:var(--ink);color:var(--tx-d);
   border:1px solid var(--line-l);
   padding:clamp(24px,3.6vw,40px);
+  grid-area:calc;
 }
 .calc::before{
   content:"";position:absolute;top:10px;left:10px;right:10px;bottom:10px;
@@ -291,6 +300,14 @@ input[type="range"]:focus{outline:none}
 input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var(--amber),0 0 0 5px rgba(232,181,58,.25)}
 
 .calc-rule{border:none;border-top:1px solid var(--line-d);margin:34px 0 0}
+.calc-state{
+  display:none;
+  margin-top:20px;padding:12px 14px;border-left:2px solid var(--line-d-strong);
+  font-family:var(--mono);font-size:.72rem;letter-spacing:.02em;line-height:1.7;color:var(--tx-d-soft);
+}
+.calc-state.show{display:block}
+.calc-state.empty{border-left-color:var(--amber);color:var(--tx-d)}
+.calc-state.error{border-left-color:var(--red, #E36A5C);color:#F2BBB4}
 .res-grid{display:grid;gap:16px;margin-top:26px}
 @media (min-width:560px){.res-grid{grid-template-columns:1fr 1fr}}
 .res-card{
@@ -326,6 +343,7 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var
   background:var(--paper-2);color:var(--tx-l);
   border:1px solid var(--line-l);border-top:3px solid var(--ink);
   padding:clamp(24px,3vw,34px);
+  grid-area:lead;
 }
 .lead-eyebrow{
   font-family:var(--mono);font-weight:500;font-size:.62rem;letter-spacing:.22em;
@@ -505,12 +523,13 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var
 </style>
 </head>
 <body>
+<a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
 <div class="grain" aria-hidden="true"></div>
 
 <!-- ============ 1. Nav ============ -->
 <header class="nav dark">
   <div class="wrap nav-inner">
-    <a class="lockup" href="#topo" aria-label="Kilo · Passaporte Fiscal — início">
+    <a class="lockup" href="#conteudo" aria-label="Kilo · Passaporte Fiscal — início">
       <svg class="lockup-badge" width="30" height="30" viewBox="0 0 30 30" role="img" aria-hidden="true" focusable="false">
         <rect x="1" y="1" width="28" height="28" fill="none" stroke="#E8B53A" stroke-width="1"/>
         <rect x="4" y="4" width="22" height="22" fill="none" stroke="#E8B53A" stroke-width="1" stroke-dasharray="2 3"/>
@@ -525,14 +544,13 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var
       <a class="nav-link hide-s" href="#como-funciona">Como funciona</a>
       <a class="nav-link hide-s" href="#rating">Rating</a>
       <a class="nav-link hide-s" href="#termo">Termo</a>
-      <a class="nav-link" href="/login">Entrar</a>
-      <a class="btn btn-amber btn-sm" href="#simular">Simular</a>
+      <a class="btn btn-amber btn-sm" href="#leadCard">Quero análise</a>
     </nav>
   </div>
 </header>
 
 <!-- ============ 2. Hero ============ -->
-<main id="topo">
+<main id="conteudo">
 <section class="hero dark">
   <div class="wrap">
     <div class="hero-stamp" aria-hidden="true">
@@ -554,13 +572,13 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var
       <p class="eyebrow rv">Crédito acumulado de ICMS · Rota CAT 42/SP</p>
       <h1 class="h1 rv">Quanto vale o seu crédito de ICMS — <em>hoje</em>, e o que ele vira em <em>2033</em>.</h1>
       <p class="lead-p rv">
-        Simule o deságio justo do seu crédito acumulado e veja o que a LC&nbsp;214/2025
-        faz com quem chegar à transição sem homologar. O Passaporte Fiscal atesta a
-        completude documental do seu crédito — para comprador, advogado e fisco.
+        A Kilo prepara o dossiê do seu crédito acumulado e o Passaporte Fiscal
+        atesta a coerência documental para comprador, jurídico e fiscal.
+        <strong>Prepara e atesta — nunca homologa.</strong>
       </p>
       <div class="hero-cta rv">
-        <a class="btn btn-amber" href="#simular">Simular meu crédito</a>
-        <a class="btn btn-ghost" href="#como-funciona">Como funciona</a>
+        <a class="btn btn-amber" href="#leadCard">Quero diagnóstico do meu crédito</a>
+        <a class="btn btn-ghost" href="#simular">Abrir calculadora</a>
       </div>
       <p class="count-pill rv" role="status">
         <span>Transição LC&nbsp;214</span>
@@ -590,13 +608,73 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var
         <p class="eyebrow rv">Simulador</p>
         <h2 class="h2 rv">A calculadora do deságio</h2>
         <p class="lead-p rv">
-          Quatro entradas, dois cenários. À esquerda, o valor justo do crédito com o
-          dossiê atestado; à direita, o que ele vale se virar 240 parcelas na transição.
+          Primeiro, deixe seu contato para receber a leitura completa. Depois,
+          ajuste a estimativa e compare o crédito preparado e atestado com o
+          cenário de 240 parcelas na transição.
         </p>
       </div>
     </div>
 
     <div class="sim-grid">
+      <!-- Captura de lead -->
+      <aside class="lead-card rv" id="leadCard" aria-label="Receba a análise completa">
+        <div id="leadFormWrap">
+          <p class="lead-eyebrow">Lead qualificado · POST /api/lead</p>
+          <h3 class="lead-title">Receba a análise completa do seu crédito</h3>
+          <p class="lead-sub">
+            Conte quem você é e a faixa do crédito. A Kilo retorna com o
+            diagnóstico preliminar, o rating estimado e os próximos passos da
+            rota CAT&nbsp;42/SP — sem prometer homologação.
+          </p>
+          <form class="lead-form" id="leadForm" novalidate>
+            <div>
+              <label for="leadNome">Nome</label>
+              <input id="leadNome" name="nome" type="text" autocomplete="name" required>
+            </div>
+            <div>
+              <label for="leadEmail">E-mail</label>
+              <input id="leadEmail" name="email" type="email" autocomplete="email" required>
+            </div>
+            <div>
+              <label for="leadEmpresa">Empresa</label>
+              <input id="leadEmpresa" name="empresa" type="text" autocomplete="organization">
+            </div>
+            <div>
+              <label for="leadValor">Valor aproximado do crédito</label>
+              <input id="leadValor" name="valor_credito" type="text" inputmode="numeric"
+                     autocomplete="off" data-placeholder="true">
+            </div>
+            <div class="hp" aria-hidden="true">
+              <label for="leadWebsite">Website</label>
+              <input id="leadWebsite" name="website" type="text" tabindex="-1" autocomplete="off">
+            </div>
+            <p class="form-error" id="leadError" role="alert"></p>
+            <button class="btn btn-amber" id="leadSubmit" type="submit">Quero a análise completa</button>
+            <p class="lead-fine">
+              Sem spam. Seus dados só são usados para responder a esta
+              solicitação e enviar o retorno preliminar.
+            </p>
+          </form>
+        </div>
+
+        <div class="lead-success" id="leadSuccess" aria-live="polite">
+          <p class="success-check">
+            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+              <circle cx="8" cy="8" r="7" fill="none" stroke="#2F7A52" stroke-width="1.5"/>
+              <path d="M5 8.2l2 2 4-4.4" fill="none" stroke="#2F7A52" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span id="successTitle">Recebido</span>
+          </p>
+          <p class="success-msg" id="successMsg"></p>
+          <ul class="success-sum">
+            <li><span>Valor nominal</span><strong id="sumVn">—</strong></li>
+            <li><span>Rating simulado</span><strong id="sumRating">—</strong></li>
+            <li><span>Valor justo hoje</span><strong id="sumFv">—</strong></li>
+            <li><span>Deságio justo</span><strong id="sumD">—</strong></li>
+          </ul>
+        </div>
+      </aside>
+
       <!-- Calculadora -->
       <div class="calc rv" role="region" aria-label="Calculadora de deságio">
         <div class="calc-head">
@@ -649,6 +727,7 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var
         </div>
 
         <hr class="calc-rule">
+        <p class="calc-state" id="calcState" aria-live="polite"></p>
 
         <div class="res-grid" aria-live="polite">
           <div class="res-card good">
@@ -669,66 +748,9 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var
 
         <p class="calc-note">
           fv = vn·(1−g)/(1+i)^T &nbsp;·&nbsp; transição: pv de 240 parcelas mensais.
-          Estimativa técnica — não é parecer nem garantia de homologação.
+          Estimativa técnica — não é parecer, promessa nem garantia de homologação.
         </p>
       </div>
-
-      <!-- Captura de lead -->
-      <aside class="lead-card rv" id="leadCard" aria-label="Receba a análise completa">
-        <div id="leadFormWrap">
-          <p class="lead-eyebrow">Análise preliminar · grátis</p>
-          <h3 class="lead-title">Receba a análise completa do seu crédito</h3>
-          <p class="lead-sub">
-            Deixe seus dados e enviamos o dossiê preliminar com o rating estimado
-            e os próximos passos da rota CAT&nbsp;42/SP.
-          </p>
-          <form class="lead-form" id="leadForm" novalidate>
-            <div>
-              <label for="leadNome">Nome</label>
-              <input id="leadNome" name="nome" type="text" autocomplete="name" required>
-            </div>
-            <div>
-              <label for="leadEmail">E-mail</label>
-              <input id="leadEmail" name="email" type="email" autocomplete="email" required>
-            </div>
-            <div>
-              <label for="leadEmpresa">Empresa</label>
-              <input id="leadEmpresa" name="empresa" type="text" autocomplete="organization">
-            </div>
-            <div>
-              <label for="leadValor">Valor aproximado do crédito</label>
-              <input id="leadValor" name="valor_credito" type="text" inputmode="numeric"
-                     autocomplete="off" data-placeholder="true">
-            </div>
-            <div class="hp" aria-hidden="true">
-              <label for="leadWebsite">Website</label>
-              <input id="leadWebsite" name="website" type="text" tabindex="-1" autocomplete="off">
-            </div>
-            <p class="form-error" id="leadError" role="alert"></p>
-            <button class="btn btn-amber" id="leadSubmit" type="submit">Quero a análise completa</button>
-            <p class="lead-fine">
-              Sem spam. Usamos seus dados apenas para responder a esta solicitação.
-            </p>
-          </form>
-        </div>
-
-        <div class="lead-success" id="leadSuccess" aria-live="polite">
-          <p class="success-check">
-            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-              <circle cx="8" cy="8" r="7" fill="none" stroke="#2F7A52" stroke-width="1.5"/>
-              <path d="M5 8.2l2 2 4-4.4" fill="none" stroke="#2F7A52" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <span id="successTitle">Recebido</span>
-          </p>
-          <p class="success-msg" id="successMsg"></p>
-          <ul class="success-sum">
-            <li><span>Valor nominal</span><strong id="sumVn">—</strong></li>
-            <li><span>Rating simulado</span><strong id="sumRating">—</strong></li>
-            <li><span>Valor justo hoje</span><strong id="sumFv">—</strong></li>
-            <li><span>Deságio justo</span><strong id="sumD">—</strong></li>
-          </ul>
-        </div>
-      </aside>
     </div>
   </div>
 </section>
@@ -1032,7 +1054,7 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var
   <div class="wrap">
     <div class="foot-grid">
       <div>
-        <a class="lockup" href="#topo" aria-label="Kilo · Passaporte Fiscal — voltar ao topo">
+        <a class="lockup" href="#conteudo" aria-label="Kilo · Passaporte Fiscal — voltar ao topo">
           <svg class="lockup-badge" width="30" height="30" viewBox="0 0 30 30" role="img" aria-hidden="true" focusable="false">
             <rect x="1" y="1" width="28" height="28" fill="none" stroke="#E8B53A" stroke-width="1"/>
             <rect x="4" y="4" width="22" height="22" fill="none" stroke="#E8B53A" stroke-width="1" stroke-dasharray="2 3"/>
@@ -1090,6 +1112,7 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var
   var lastResult = null;
   var leadValorDirty = false;
   var leadDone = false;
+  var simTouched = false;
 
   /* ============ Helpers ============ */
   function $(id) { return document.getElementById(id); }
@@ -1124,13 +1147,29 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var
     return { g: g, fv: fv, d: d, pv: pv, perda: perda };
   }
 
+  function setCalcState(mode, msg) {
+    var el = $('calcState');
+    el.textContent = msg || '';
+    el.className = mode ? 'calc-state show ' + mode : 'calc-state';
+  }
+
   function render(res) {
+    if (!state.vn) {
+      $('resFairValue').textContent = '—';
+      $('resDesagio').textContent = '—';
+      $('resPV').textContent = '—';
+      $('resPerda').textContent = '—';
+      $('resDelta').innerHTML = 'Informe o valor nominal para comparar <strong>os dois cenários</strong>.';
+      setCalcState(simTouched ? 'empty' : '', simTouched ? 'Preencha o valor nominal do crédito para liberar a simulação.' : '');
+      return;
+    }
     $('resFairValue').textContent = fmtBRL.format(res.fv);
     $('resDesagio').textContent = fmtPct(res.d);
     $('resPV').textContent = fmtBRL.format(res.pv);
     $('resPerda').textContent = fmtPct(res.perda);
     $('resDelta').innerHTML = 'Homologar antes da transição preserva <strong>' +
       fmtBRL.format(Math.max(0, res.fv - res.pv)) + '</strong> do seu crédito.';
+    setCalcState('', '');
   }
 
   /* ============ Conferência pelo servidor ============ */
@@ -1177,11 +1216,15 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var
         var okD = typeof data.desagio_justo === 'number' &&
           Math.abs(data.desagio_justo - lastResult.d) < 0.0005;
         setBadge(okFv && okD ? 'ok' : 'idle');
+        if (state.vn) setCalcState('', '');
       })
       .catch(function (err) {
         if (err && err.name === 'AbortError') return;
         if (mySeq !== seq) return;
         setBadge('idle'); // segue com o cálculo local, sem drama
+        if (simTouched && state.vn) {
+          setCalcState('error', 'Não foi possível conferir no servidor agora. Seguimos com a estimativa local.');
+        }
       });
   }
 
@@ -1195,7 +1238,7 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var
   }
 
   function onSim(userAction) {
-    if (userAction) document.body.classList.add('has-sim');
+    if (userAction) simTouched = true;
     lastResult = compute();
     render(lastResult);
     syncLeadValor();
