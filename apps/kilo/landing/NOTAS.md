@@ -20,6 +20,10 @@ Todo o conteúdo em PT-BR. Vanilla JS em um único `<script>` no final; única d
   o círculo, "Ed25519"/"SHA-256" ao centro), rotação −6° como carimbo real. Usado com
   parcimônia: hero (desktop) + CTA final. O lockup da nav/footer usa o mesmo vocabulário
   (quadrado com filete tracejado + K em Fraunces).
+- **Refresh de marca (set/2026):** `kilo-mark.svg` vira a marca principal em nav, hero e
+  footer/CTA final. O desenho combina "passaporte" (miolo retangular com linhas de dossiê)
+  + "peso/registro" (dupla moldura de selo e eixo de balança) com o `K` em Fraunces no
+  centro. Favicon passa a apontar para a mesma marca para coerência entre aba e página.
 - **Estrutura da página:** nav sticky com hairline → hero editorial (headline Fraunces grande,
   sub, CTAs, pílula-contador) → faixa de credenciais em mono (`ED25519 · SHA-256 ·
   DOCUMENTED_FOR_REVIEW · CAT 42/SP · RATING A/B/C · VERIFICÁVEL OFFLINE`) → calculadora +

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-labelledby="title desc">
+  <title id="title">Kilo mark</title>
+  <desc id="desc">Selo editorial com passaporte fiscal e metáfora de peso documental.</desc>
+  <rect x="16" y="16" width="208" height="208" rx="28" fill="#0B0F1A" stroke="#E8B53A" stroke-width="3"/>
+  <rect x="32" y="32" width="176" height="176" rx="22" fill="none" stroke="#E8B53A" stroke-width="2" stroke-dasharray="5 8" opacity="0.9"/>
+
+  <rect x="68" y="72" width="104" height="120" rx="12" fill="none" stroke="#F5EFE0" stroke-width="2"/>
+  <line x1="86" y1="96" x2="154" y2="96" stroke="#F5EFE0" stroke-width="2" opacity="0.8"/>
+  <line x1="86" y1="112" x2="154" y2="112" stroke="#F5EFE0" stroke-width="2" opacity="0.55"/>
+
+  <path d="M100 146h40" stroke="#E8B53A" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="104" cy="146" r="8" fill="none" stroke="#E8B53A" stroke-width="2"/>
+  <circle cx="136" cy="146" r="8" fill="none" stroke="#E8B53A" stroke-width="2"/>
+
+  <text x="120" y="164" text-anchor="middle" fill="#E8B53A" font-family="Fraunces, Georgia, serif" font-size="52" font-weight="600">K</text>
+</svg>
