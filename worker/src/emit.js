@@ -3,7 +3,7 @@
 
 import { computePricing, DEFAULT_I, DEFAULT_T } from './pricing.js';
 import { jsonResponse, errorResponse, parseJsonBody, isNonEmptyString } from './validate.js';
-import { montarDocumentosDoBody, extrairParamsDoBody } from './scan.js';
+import { montarDocumentosDoBody, extrairParamsDoBody, MAX_SCAN_BODY_BYTES } from './scan.js';
 import {
   buildPassaporteFromDossier,
   signPassaporte,
@@ -30,7 +30,7 @@ export function isPassportV1Body(body) {
 export async function handlePassaporte(request, env) {
   if (!hasSigningKey(env)) return noSigningKey();
 
-  const parsed = await parseJsonBody(request);
+  const parsed = await parseJsonBody(request, { maxBytes: MAX_SCAN_BODY_BYTES });
   if (!parsed.ok) return parsed.response;
   const body = parsed.value;
 

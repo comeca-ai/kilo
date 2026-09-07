@@ -64,6 +64,7 @@ Checklist `closing` segue opcional e **não** altera o rating fiscal.
 | 400 | `PASSPORT_V1_RETIRED` | body no formato antigo (só `documents[].kind`) |
 | 400 | `INVALID_SCAN_INPUT` | sem XML/EFD/supporting_docs, ou tipo errado |
 | 409 | `DOSSIER_MISMATCH` | `output_hash` informado ≠ reexecução |
+| 413 | `PAYLOAD_TOO_LARGE` | corpo > 2 MB (mesmo teto de `/api/scan`) |
 
 Assinatura e `/api/verify` não mudam: Ed25519 sobre o JSON canônico **sem**
 `signature`. Passaportes v1 já emitidos continuam verificáveis.
