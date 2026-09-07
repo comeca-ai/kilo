@@ -4,18 +4,17 @@
 
 name = "kilo-passaporte"
 main = "src/index.js"
-compatibility_date = "2025-09-01"
+compatibility_date = "2026-09-07"
+workers_dev = true
+minify = true
+
+[placement]
+mode = "smart"
 
 # Static Assets: landing estática servida de ./public pela borda.
-# Default de roteamento: caminho que casa asset → asset servido direto;
-# caminho sem asset (ex.: /api/*) → cai no fetch do Worker. Sem flags extras.
-# Docs: https://developers.cloudflare.com/workers/static-assets/routing/
 [assets]
 directory = "./public"
 
-# Banco D1 do projeto (leads + rate limit).
-# Crie com:   wrangler d1 create kilo-passaporte
-# Migre com:  wrangler d1 migrations apply kilo-passaporte --remote
 [[d1_databases]]
 binding = "DB"
 database_name = "kilo-passaporte"
@@ -23,29 +22,16 @@ database_id = "00000000-0000-0000-0000-000000000000" # <- substitua pelo id reto
 migrations_dir = "migrations"
 
 [vars]
-# Allowlist de origens para CORS, separada por vírgula.
-# Default "*" funciona para desenvolvimento, mas em produção troque pelos domínios próprios:
-#   ALLOWED_ORIGINS = "https://app.seudominio.com.br,https://www.seudominio.com.br"
-ALLOWED_ORIGINS = "*"
+# Em produção: allowlist (sem *). Same-origin landing+API não precisa de CORS amplo.
+ALLOWED_ORIGINS = "https://kilo.ia.br,http://localhost:8787,http://127.0.0.1:8787"
 
-# Logs de produção (Workers Logs / wrangler tail).
 [observability]
 enabled = true
 
-# ---------------------------------------------------------------------------
-# Chave de assinatura Ed25519 — NUNCA neste arquivo. Use secret:
-#   node scripts/genkey.mjs          # gera o par e imprime o JWK privado
-#   wrangler secret put SIGNING_KEY_JWK
-# (cole o JSON do JWK privado, uma única linha)
-#
-# Rotação (opcional): durante a janela de troca, mantenha a chave anterior em
-#   wrangler secret put SIGNING_KEY_JWK_PREVIOUS
-# para que /api/verify continue aceitando passaportes assinados com ela.
-# Detalhes em ../docs/RUNBOOK-CHAVE.md.
-# ---------------------------------------------------------------------------
+# Chave Ed25519: wrangler secret put SIGNING_KEY_JWK — NUNCA neste arquivo.
+# Rotação: SIGNING_KEY_JWK_PREVIOUS — ver ../docs/RUNBOOK-CHAVE.md.
 
 # Domínio próprio (opcional):
-# workers_dev = false
 # [[routes]]
-# pattern = "seudominio.com.br"
+# pattern = "kilo.ia.br"
 # custom_domain = true
