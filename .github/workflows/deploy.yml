@@ -72,7 +72,7 @@ jobs:
       - name: Aplicar migrations do D1 (remote; em CI a confirmação é pulada)
         run: npx wrangler d1 migrations apply kilo-passaporte --remote
 
-      - name: Publicar app demo em /passaporte (fonte canônica: apps/passaporte)
+      - name: Publicar app demo em /passaporte — fonte canônica apps/passaporte
         run: |
           set -e
           mkdir -p public/passaporte
