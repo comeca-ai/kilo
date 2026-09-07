@@ -22,6 +22,7 @@ Convenções gerais:
 | `/api/health`       | GET    | 120/min |
 | `/api/pubkey`       | GET    | 120/min |
 | `/api/ruleset`      | GET    | 120/min |
+| `/api/closing/checklist` | GET | 120/min |
 | `/api/desagio`      | GET    | 60/min  |
 | `/api/passaporte`   | POST   | 10/min  |
 | `/api/verify`       | POST   | 60/min  |
@@ -94,6 +95,42 @@ Sem secret configurado → `503 {"error":{"code":"NO_SIGNING_KEY","message":"Cha
 > declaração, pretty-print ou escape de não-ASCII (`\uXXXX`) produzem hashes diferentes. Ao
 > verificar externamente, use o mesmo algoritmo de `src/canonical.js`. O hash muda se qualquer
 > campo do ruleset mudar (inclusive textos de `desc`).
+
+---
+
+## GET /api/closing/checklist
+
+Expõe o **checklist de fechamento** (diligência da contraparte) usado na avaliação do campo
+`closing` do `/api/passaporte`. É um ruleset à parte, com versão e hash próprios — **não** faz
+parte do ruleset fiscal e não altera `ruleset_hash`.
+
+`200`:
+
+```json
+{
+  "checklist": {
+    "checklist_id": "FECHAMENTO",
+    "version": "v1",
+    "desc": "Documentos de fechamento exigidos pela contraparte (diligência/KYC), independentes da rota fiscal.",
+    "itens": [
+      {"kind": "cartao_cnpj", "label": "Cartão CNPJ (comprovante de inscrição)", "categoria": "possuido"},
+      {"kind": "contrato_social", "label": "Contrato social consolidado", "categoria": "possuido"},
+      {"kind": "inscricao_estadual", "label": "Comprovante de Inscrição Estadual (I.E.)", "categoria": "possuido"},
+      {"kind": "cnd_estadual", "label": "CND Estadual (certidão negativa de débitos)", "categoria": "possuido"},
+      {"kind": "politica_governanca", "label": "Política de governança/compliance", "categoria": "possuido"},
+      {"kind": "balanco", "label": "Balanço/balancete (3 últimos meses)", "categoria": "possuido", "min_count": 3},
+      {"kind": "nda", "label": "NDA assinado", "categoria": "a_assinar"},
+      {"kind": "procuracao", "label": "Procuração", "categoria": "a_assinar"}
+    ]
+  },
+  "checklist_hash": "sha256:<hex64>"
+}
+```
+
+> `checklist_hash` é o SHA-256 do JSON canônico do checklist (mesmo algoritmo de
+> `src/canonical.js`), computado no isolate — reproduzível externamente. Categoria
+> `possuido` = documento que a organização já deve ter (ausência → `missing`);
+> `a_assinar` = instrumento a assinar no fechamento (ausência → `pending_signature`).
 
 ---
 
@@ -215,8 +252,38 @@ Regras determinísticas do servidor:
 - `pricing` usa a grade atribuída, `i=0.015`, `T=12`.
 
 Validações `400`: `INVALID_HOLDER_ORG_ID` (ausente/vazio), `INVALID_AMOUNT` (`amount_cents` ausente,
-não inteiro ou ≤ 0), `INVALID_DOCUMENTS` (`documents` ausente ou não-array), `INVALID_JSON` (corpo
-malformado). Sem secret → `503 NO_SIGNING_KEY`.
+não inteiro ou ≤ 0), `INVALID_DOCUMENTS` (`documents` ausente ou não-array), `INVALID_CLOSING`
+(`closing` presente mas não-array), `INVALID_JSON` (corpo malformado). Sem secret → `503 NO_SIGNING_KEY`.
+
+### Checklist de Fechamento (opcional)
+
+O body aceita o campo opcional `closing`: array de `{"kind": "<kind do checklist>", "competencia": "YYYY-MM"?}`
+(campo `competencia` só é relevante para `balanco`). Quando presente, o passaporte ganha o campo
+`closing` (logo após `findings`) com a avaliação determinística do checklist de fechamento:
+
+```json
+"closing": {
+  "version": "FECHAMENTO@v1",
+  "checklist_hash": "sha256:<hex64>",
+  "completeness": 0.875,
+  "present": ["cartao_cnpj", "..."],
+  "missing": ["balanco"],
+  "pending_signature": ["nda", "procuracao"],
+  "details": {"balanco": {"present_count": 2}}
+}
+```
+
+Regras da avaliação (função pura, sem relógio/aleatoriedade — ver `src/closing.js`):
+
+- `balanco` exige **3 competências distintas** (`competencia` no formato `YYYY-MM`); se nenhum doc
+  `balanco` tiver `competencia`, conta-se o número de instâncias. Os demais itens bastam 1 doc do `kind`.
+- `missing` lista só itens `possuido` ausentes; `pending_signature` lista itens `a_assinar` ausentes.
+- O checklist servido (e o hash) está em `GET /api/closing/checklist`.
+
+> **Nota de produto**: o checklist de fechamento é **diligência da contraparte** e **NÃO altera o
+> rating fiscal A/B/C** (nem `ruleset_hash`, `completeness` fiscal ou findings); `nda`/`procuração`
+> são instrumentos a assinar — ausência é **pendência, não falha**. Sem o campo `closing` no body,
+> o passaporte sai **sem** o campo (retrocompatibilidade byte-a-byte com o contrato anterior).
 
 ---
 
@@ -372,6 +439,7 @@ gravação — "Captura temporariamente indisponível."). IP e user-agent são g
 | `INVALID_HOLDER_ORG_ID` | 400 | `/api/passaporte`                                 |
 | `INVALID_AMOUNT`      | 400  | `/api/passaporte`                                 |
 | `INVALID_DOCUMENTS`   | 400  | `/api/passaporte`                                 |
+| `INVALID_CLOSING`     | 400  | `/api/passaporte`                                 |
 | `INVALID_PASSAPORTE`  | 400  | `/api/verify`                                     |
 | `INVALID_LEAD`        | 400  | `/api/lead`                                       |
 | `INVALID_SCAN_INPUT`  | 400  | `/api/scan`                                       |

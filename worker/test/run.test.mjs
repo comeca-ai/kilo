@@ -37,6 +37,14 @@ import { ratingV1 } from '../motor/rating.js';
 import { buildManifest, buildOutputHash } from '../motor/manifest.js';
 import { executar } from '../motor/engine.js';
 import { RULESET } from '../rulesets/br-sp-cat42.v2026.09.js';
+import { RULESET_HASH } from '../src/ruleset.js';
+import {
+  CLOSING_CHECKLIST,
+  CLOSING_CHECKLIST_HASH,
+  evaluateClosing,
+  isClosingKind,
+} from '../src/closing.js';
+import { buildPassaporte } from '../src/passport.js';
 
 const RAIZ = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURES = path.join(RAIZ, 'fixtures');
@@ -421,6 +429,93 @@ test('engine: documento parseável sem text → skipped, sem inventar dados', as
   assert.equal(dossier.parsed_resumo.periodo_efd, null);
   assert.equal(dossier.parsed_resumo.skipped.length, 1);
   assert.equal(dossier.parsed_resumo.skipped[0].kind, 'efd_icms_ipi');
+});
+
+/* ------------------------------------------------------------------------ */
+/* closing.js — Checklist de Fechamento (diligência da contraparte)          */
+/* ------------------------------------------------------------------------ */
+
+const CLOSING_COMPLETO = [
+  { kind: 'cartao_cnpj' },
+  { kind: 'contrato_social' },
+  { kind: 'inscricao_estadual' },
+  { kind: 'cnd_estadual' },
+  { kind: 'politica_governanca' },
+  { kind: 'balanco', competencia: '2026-06' },
+  { kind: 'balanco', competencia: '2026-07' },
+  { kind: 'balanco', competencia: '2026-08' },
+  { kind: 'nda' },
+  { kind: 'procuracao' },
+];
+
+const BODY_BASE = {
+  holder_org_id: 'cnpj_11222333000181',
+  amount_cents: 250000000,
+  reference_period: { from: '2026-08-01', to: '2026-08-31' },
+  documents: [],
+};
+
+test('passaporte SEM closing: sem campo "closing" e ruleset_hash golden intacto', async () => {
+  const p = await buildPassaporte({ ...BODY_BASE });
+  assert.equal('closing' in p, false);
+  // Golden congelado: o módulo de fechamento NÃO pode alterar o hash do ruleset fiscal.
+  assert.equal(
+    p.ruleset_hash,
+    'sha256:49878474f494a1545a3c3e94a04f4b031e9057d25c5e734fd9fe294e98f383d7'
+  );
+  assert.equal(RULESET_HASH, p.ruleset_hash);
+});
+
+test('evaluateClosing: checklist completo → completeness 1, sem missing/pending', () => {
+  const r = evaluateClosing(CLOSING_COMPLETO);
+  assert.equal(r.completeness, 1);
+  assert.deepEqual(r.missing, []);
+  assert.deepEqual(r.pending_signature, []);
+  assert.equal(r.present.length, CLOSING_CHECKLIST.itens.length);
+  assert.equal(r.details.balanco.present_count, 3);
+  assert.match(r.checklist_hash, /^sha256:[0-9a-f]{64}$/);
+  assert.equal(r.checklist_hash, CLOSING_CHECKLIST_HASH);
+  assert.equal(r.version, 'FECHAMENTO@v1');
+});
+
+test('evaluateClosing: balanco com só 2 competências → "balanco" em missing', () => {
+  const itens = CLOSING_COMPLETO.filter(
+    (d) => !(d.kind === 'balanco' && d.competencia === '2026-08')
+  );
+  const r = evaluateClosing(itens);
+  assert.ok(r.missing.includes('balanco'));
+  assert.equal(r.details.balanco.present_count, 2);
+  // sem competencia, o fallback conta instâncias (3 balancos "soltos" bastam)
+  const r2 = evaluateClosing([{ kind: 'balanco' }, { kind: 'balanco' }, { kind: 'balanco' }]);
+  assert.ok(r2.present.includes('balanco'));
+  assert.equal(r2.details.balanco.present_count, 3);
+});
+
+test('evaluateClosing: sem nda/procuracao → pending_signature, NÃO missing', () => {
+  const itens = CLOSING_COMPLETO.filter((d) => d.kind !== 'nda' && d.kind !== 'procuracao');
+  const r = evaluateClosing(itens);
+  assert.deepEqual(r.pending_signature, ['nda', 'procuracao']);
+  assert.deepEqual(r.missing, []);
+  assert.equal(r.present.includes('nda'), false);
+  // isClosingKind: kinds do checklist reconhecidos; kinds fiscais não
+  assert.equal(isClosingKind('nda'), true);
+  assert.equal(isClosingKind('balanco'), true);
+  assert.equal(isClosingKind('nfe_xml'), false);
+});
+
+test('buildPassaporte com body.closing → campo closing com checklist_hash sha256:', async () => {
+  const p = await buildPassaporte({ ...BODY_BASE, closing: CLOSING_COMPLETO });
+  assert.ok(p.closing);
+  assert.match(p.closing.checklist_hash, /^sha256:[0-9a-f]{64}$/);
+  assert.equal(p.closing.completeness, 1);
+  assert.deepEqual(p.closing.missing, []);
+  assert.deepEqual(p.closing.pending_signature, []);
+  // O fechamento NÃO altera o rating fiscal nem o ruleset_hash.
+  assert.equal(p.rating.grade, 'C'); // documents: [] → grade C, como antes
+  assert.equal(
+    p.ruleset_hash,
+    'sha256:49878474f494a1545a3c3e94a04f4b031e9057d25c5e734fd9fe294e98f383d7'
+  );
 });
 
 test('REPRODUTIBILIDADE: 2 execuções → output_hash idêntico (casos A e C)', async () => {

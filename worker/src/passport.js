@@ -17,6 +17,7 @@ import {
   randomHex,
 } from './canonical.js';
 import { RULESET, RULESET_HASH } from './ruleset.js';
+import { evaluateClosing } from './closing.js';
 import { isNonEmptyString, isValidReferencePeriod } from './validate.js';
 
 // Cache de chaves importadas por isolate (importKey é relativamente caro; o JWK não muda em runtime).
@@ -156,6 +157,11 @@ export async function buildPassaporte(body) {
     status_claim: 'DOCUMENTED_FOR_REVIEW',
     completeness,
     findings,
+    // Checklist de fechamento (diligência da contraparte, ver src/closing.js): só entra
+    // quando body.closing é array — sem o campo, o passaporte fica byte-a-byte igual
+    // ao contrato anterior (retrocompatibilidade de hash/assinatura). NÃO altera rating
+    // nem ruleset_hash. Posição cosmética: logo após findings.
+    ...(Array.isArray(body.closing) ? { closing: evaluateClosing(body.closing) } : {}),
     evidence_manifest_hash: 'sha256:' + evidenceManifestHash,
     ruleset_hash: RULESET_HASH,
     input_hash: 'sha256:' + inputHash,

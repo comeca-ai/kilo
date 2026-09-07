@@ -33,6 +33,7 @@ import {
   getPublicJwk,
 } from './passport.js';
 import { randomBase32 } from './canonical.js';
+import { CLOSING_CHECKLIST, CLOSING_CHECKLIST_HASH } from './closing.js';
 
 // Limites por rota (requisições/minuto, janela fixa por IP). Demais rotas: 120/min.
 const RATE_LIMITS = {
@@ -116,6 +117,7 @@ async function route(request, env, ctx, corsOrigin) {
     'GET /api/health': handleHealth,
     'GET /api/pubkey': handlePubkey,
     'GET /api/ruleset': handleRuleset,
+    'GET /api/closing/checklist': handleClosingChecklist,
     'GET /api/desagio': handleDesagio,
     'POST /api/passaporte': handlePassaporte,
     'POST /api/verify': handleVerify,
@@ -191,6 +193,14 @@ function handleRuleset() {
 }
 
 // ---------------------------------------------------------------------------
+// GET /api/closing/checklist — checklist de fechamento (diligência da contraparte)
+// ---------------------------------------------------------------------------
+
+function handleClosingChecklist() {
+  return jsonResponse({ checklist: CLOSING_CHECKLIST, checklist_hash: CLOSING_CHECKLIST_HASH });
+}
+
+// ---------------------------------------------------------------------------
 // GET /api/desagio?vn=&rating=&i=&T=
 // Hardening: nada de fallback silencioso — entrada inválida é 400 com código claro.
 // ---------------------------------------------------------------------------
@@ -249,6 +259,10 @@ async function handlePassaporte(request, env) {
   }
   if (!Array.isArray(body.documents)) {
     return errorResponse(400, 'INVALID_DOCUMENTS', 'Informe documents como array (pode ser vazio).', 'documents');
+  }
+  // Checklist de fechamento é opcional; se presente, deve ser array.
+  if (body.closing !== undefined && !Array.isArray(body.closing)) {
+    return errorResponse(400, 'INVALID_CLOSING', 'Informe closing como array de {kind, competencia?} (opcional).', 'closing');
   }
 
   const passaporte = await buildPassaporte(body);
