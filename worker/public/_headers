@@ -1,0 +1,23 @@
+# Security + cache headers for Workers Static Assets
+# https://developers.cloudflare.com/workers/static-assets/headers/
+
+/
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  X-Frame-Options: DENY
+  Cache-Control: public, max-age=0, must-revalidate
+
+/login/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  X-Frame-Options: DENY
+  Cache-Control: public, max-age=0, must-revalidate
+
+/passaporte/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  X-Frame-Options: DENY
+  Cache-Control: public, max-age=0, must-revalidate

@@ -8,31 +8,30 @@
 #   2. wrangler d1 create kilo-passaporte   → colar o database_id abaixo
 #   3. wrangler d1 migrations apply kilo-passaporte --remote
 #   4. wrangler secret put SIGNING_KEY_JWK  (chave NUNCA vai neste arquivo)
+#
+v2 notes: minify + smart placement + CORS allowlist + compatibility_date atualizado.
 
 name = "kilo-passaporte"
 main = "src/index.js"
-compatibility_date = "2025-09-01"
+compatibility_date = "2026-09-07"
 # Responde no domínio próprio (kilo.ia.br) E no *.workers.dev (links de demo).
 workers_dev = true
 
+# Bundle menor na borda (cold start / transfer).
+minify = true
+
+# Coloca o isolate perto do tráfego quando o runtime permitir.
+[placement]
+mode = "smart"
+
 # ---------------------------------------------------------------------------
 # Static Assets (Workers Static Assets — wrangler v3.78+ / v4).
-# Comportamento de roteamento (default, sem flags extras):
-#   - se o caminho casa um arquivo de ./public (ex.: "/" → public/index.html),
-#     o asset é servido direto pela borda, SEM invocar o Worker;
-#   - se NÃO casa asset (ex.: qualquer /api/*), a requisição cai no fetch do
-#     Worker — é exatamente o que queremos: landing estática + API no mesmo
-#     domínio.
-# Métodos não-GET/HEAD (POST /api/...) nunca casam asset: vão direto ao Worker.
-# Docs: https://developers.cloudflare.com/workers/static-assets/routing/
 # ---------------------------------------------------------------------------
 [assets]
 directory = "./public"
 
 # ---------------------------------------------------------------------------
-# Banco D1 (leads + rate limit).
-# Crie com:   wrangler d1 create kilo-passaporte
-# Migre com:  wrangler d1 migrations apply kilo-passaporte --remote
+# Banco D1 (leads + rate limit + auth).
 # ---------------------------------------------------------------------------
 [[d1_databases]]
 binding = "DB"
@@ -41,10 +40,10 @@ database_id = "4a83e796-0c44-4f3c-974a-9cc3547bab73" # <- substitua pelo id reto
 migrations_dir = "migrations"
 
 [vars]
-# Allowlist de origens para CORS, separada por vírgula.
-# "*" funciona para começar; em produção troque pelos domínios próprios:
-#   ALLOWED_ORIGINS = "https://seudominio.com.br,https://www.seudominio.com.br"
-ALLOWED_ORIGINS = "*"
+# Allowlist de origens CORS (sem wildcard em produção).
+# Same-origin (landing + API no mesmo Worker) não depende de CORS;
+# isto cobre apenas chamadas cross-origin (ex.: preview local).
+ALLOWED_ORIGINS = "https://kilo.ia.br,http://localhost:8787,http://127.0.0.1:8787"
 
 # Logs de produção no dashboard/Wrangler tail (Workers Logs).
 [observability]
@@ -52,24 +51,11 @@ enabled = true
 
 # ---------------------------------------------------------------------------
 # Chave de assinatura Ed25519 — NUNCA neste arquivo. Use secret:
-#   node scripts/genkey.mjs          # gera o par e imprime o JWK privado
+#   node scripts/genkey.mjs
 #   wrangler secret put SIGNING_KEY_JWK
-# (cole o JSON do JWK privado, uma única linha)
-#
-# Rotação (opcional): durante a janela de troca, mantenha a chave anterior em
-#   wrangler secret put SIGNING_KEY_JWK_PREVIOUS
-# para que /api/verify continue aceitando passaportes assinados com ela.
-# Detalhes em ../docs/RUNBOOK-CHAVE.md.
+# Rotação: SIGNING_KEY_JWK_PREVIOUS — ver ../docs/RUNBOOK-CHAVE.md.
 # ---------------------------------------------------------------------------
 
-# ---------------------------------------------------------------------------
-# Domínio próprio: kilo.ia.br (zona ativa na conta; Custom Domain do Workers —
-# SSL e DNS são provisionados automaticamente no deploy).
-# workers_dev continua ativo: o worker responde nos DOIS endereços
-# (kilo.ia.br e kilo-passaporte.jhonata-emerick.workers.dev).
-# Para servir SÓ no domínio próprio: descomente workers_dev = false.
-# ---------------------------------------------------------------------------
 [[routes]]
 pattern = "kilo.ia.br"
 custom_domain = true
-# ---------------------------------------------------------------------------
