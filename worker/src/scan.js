@@ -33,37 +33,16 @@
 import { executar } from '../motor/engine.js';
 import { RULESET } from '../rulesets/br-sp-cat42.v2026.09.js';
 import { sha256Hex } from '../motor/canonical.js';
-import { jsonResponse, errorResponse, isNonEmptyString } from './validate.js';
+import { jsonResponse, errorResponse, parseJsonBody, isNonEmptyString } from './validate.js';
 
 export const MAX_SCAN_BODY_BYTES = 2 * 1024 * 1024;
 
 const STATUS_CLAIM = 'SCAN_ONLY_NOT_A_PASSPORT';
 
 export async function handleScan(request) {
-  const contentLength = Number(request.headers.get('content-length') || 0);
-  if (Number.isFinite(contentLength) && contentLength > MAX_SCAN_BODY_BYTES) {
-    return payloadTooLarge();
-  }
-
-  let text;
-  try {
-    text = await request.text();
-  } catch {
-    return errorResponse(400, 'INVALID_JSON', 'Corpo da requisição ilegível.');
-  }
-  if (new TextEncoder().encode(text).length > MAX_SCAN_BODY_BYTES) {
-    return payloadTooLarge();
-  }
-  if (!text || !text.trim()) {
-    return errorResponse(400, 'INVALID_JSON', 'Corpo JSON ausente ou vazio.');
-  }
-
-  let body;
-  try {
-    body = JSON.parse(text);
-  } catch {
-    return errorResponse(400, 'INVALID_JSON', 'JSON malformado no corpo da requisição.');
-  }
+  const parsed = await parseJsonBody(request, { maxBytes: MAX_SCAN_BODY_BYTES });
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.value;
 
   const montado = await montarDocumentosDoBody(body);
   if (!montado.ok) {
@@ -81,14 +60,6 @@ export async function handleScan(request) {
   const params = extrairParamsDoBody(body);
   const { dossier } = await executar({ documents, ruleset: RULESET, params });
   return jsonResponse({ status_claim: STATUS_CLAIM, dossier }, 200);
-}
-
-function payloadTooLarge() {
-  return errorResponse(
-    413,
-    'PAYLOAD_TOO_LARGE',
-    'Corpo da requisição excede o limite de 2 MB.'
-  );
 }
 
 export function validaNfeXml(valor) {
