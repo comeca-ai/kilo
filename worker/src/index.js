@@ -22,6 +22,12 @@ import {
 import { randomBase32 } from './canonical.js';
 import { CLOSING_CHECKLIST, CLOSING_CHECKLIST_HASH } from './closing.js';
 import {
+  handleRegistroRegister,
+  handleRegistroList,
+  handleRegistroGet,
+  handleRegistroEvent,
+} from './registro.js';
+import {
   hashPassword,
   verifyPassword,
   getSessionToken,
@@ -44,6 +50,8 @@ const RATE_LIMITS = {
   'POST /api/verify': 60,
   'POST /api/auth/register': 10,
   'POST /api/auth/login': 10,
+  'POST /api/registro': 20,
+  'GET /api/registro': 60,
 };
 const DEFAULT_RATE_LIMIT = 120;
 const MAX_VN = 1e13;
@@ -116,8 +124,17 @@ async function route(request, env, ctx, corsOrigin) {
     'POST /api/auth/login': handleAuthLogin,
     'POST /api/auth/logout': handleAuthLogout,
     'GET /api/me': handleMe,
+    'POST /api/registro': handleRegistroRegister,
+    'GET /api/registro': handleRegistroList,
   };
-  const handler = HANDLERS[routeKey];
+  let handler = HANDLERS[routeKey];
+  // Rotas dinâmicas: /api/registro/{passport_id} (GET = consulta, POST = evento).
+  if (!handler && path.startsWith('/api/registro/')) {
+    const registroId = decodeURIComponent(path.slice('/api/registro/'.length)).trim();
+    if (request.method === 'GET') handler = (req, e) => handleRegistroGet(req, e, registroId);
+    else if (request.method === 'POST') handler = (req, e) => handleRegistroEvent(req, e, registroId);
+    else return errorResponse(405, 'METHOD_NOT_ALLOWED', 'Método não permitido nesta rota.');
+  }
   if (!handler) {
     const knownPath = Object.keys(HANDLERS).some((k) => k.endsWith(' ' + path));
     if (knownPath) return errorResponse(405, 'METHOD_NOT_ALLOWED', 'Método não permitido nesta rota.');

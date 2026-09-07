@@ -48,7 +48,7 @@ jobs:
         run: npm install --no-save wrangler@^4
 
       - name: Testes do motor (gate de deploy)
-        run: node --test test/run.test.mjs test/passaporte-v2.test.mjs
+        run: node --test test/run.test.mjs test/passaporte-v2.test.mjs test/registro.test.mjs
 
       - name: Resolver database_id do D1 (cria se não existir)
         run: |
