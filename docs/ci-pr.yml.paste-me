@@ -1,0 +1,28 @@
+name: CI · PR (colar como .github/workflows/ci-pr.yml se o token tiver scope workflow)
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-pr-kilo-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Motor tests (sem deploy)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: worker
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Testes do motor
+        run: node --test test/run.test.mjs test/passaporte-v2.test.mjs
+      - name: Wrangler dry-run
+        run: |
+          npm install --no-save wrangler@^4
+          npx wrangler deploy --dry-run
