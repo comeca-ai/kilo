@@ -9,7 +9,7 @@
     "deploy": "wrangler deploy",
     "migrate": "wrangler d1 migrations apply kilo-passaporte --remote",
     "genkey": "node scripts/genkey.mjs",
-    "test": "node test/run.test.mjs"
+    "test": "node --test test/run.test.mjs test/passaporte-v2.test.mjs"
   },
   "devDependencies": {
     "wrangler": "^4"
