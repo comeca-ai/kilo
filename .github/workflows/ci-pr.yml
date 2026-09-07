@@ -1,4 +1,4 @@
-name: CI · PR (colar como .github/workflows/ci-pr.yml se o token tiver scope workflow)
+name: CI · PR
 
 on:
   pull_request:
@@ -10,7 +10,9 @@ concurrency:
 
 jobs:
   test:
-    name: Motor tests (sem deploy)
+    # Nome idêntico ao job do deploy.yml: a proteção da main exige o check
+    # "Worker + D1" — assim PRs também satisfazem a regra antes do merge.
+    name: Worker + D1
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -20,9 +22,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Testes do motor
-        run: node --test test/run.test.mjs test/passaporte-v2.test.mjs
-      - name: Wrangler dry-run
+      - name: Testes do motor (gate de merge)
+        run: node --test test/run.test.mjs test/passaporte-v2.test.mjs test/registro.test.mjs
+      - name: Wrangler dry-run (valida wrangler.toml sem deploy)
         run: |
           npm install --no-save wrangler@^4
           npx wrangler deploy --dry-run

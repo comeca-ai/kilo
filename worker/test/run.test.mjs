@@ -699,12 +699,22 @@ const CADASTRO = {
   org_id: 'cnpj_11222333000181',
 };
 
+// POST /api/auth/register tem limite de 5/min por IP (v2). Os testes deste
+// arquivo somam mais de 5 registros e rodam na mesma janela de 60 s, então
+// cada teste usa um cf-connecting-ip próprio para isolar o bucket do limiter.
+const IP1 = { 'cf-connecting-ip': '10.10.0.1' };
+const IP2 = { 'cf-connecting-ip': '10.10.0.2' };
+const IP3 = { 'cf-connecting-ip': '10.10.0.3' };
+const IP4 = { 'cf-connecting-ip': '10.10.0.4' };
+const IP5 = { 'cf-connecting-ip': '10.10.0.5' };
+const IP6 = { 'cf-connecting-ip': '10.10.0.6' };
+
 test('auth e2e: register 201 com Set-Cookie → /api/me com cookie → 200', async () => {
   const env = { DB: mockD1() };
   const res = await worker.fetch(
     new Request('https://teste.local/api/auth/register', {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', ...IP1 },
       body: JSON.stringify(CADASTRO),
     }),
     env,
@@ -741,7 +751,7 @@ test('auth e2e: register 201 com Set-Cookie → /api/me com cookie → 200', asy
 
 test('auth e2e: login com senha errada → 401 AUTH_FAILED; correta → 200', async () => {
   const env = { DB: mockD1() };
-  const reg = await callApi(env, 'POST', '/api/auth/register', { body: CADASTRO });
+  const reg = await callApi(env, 'POST', '/api/auth/register', { body: CADASTRO, headers: IP2 });
   assert.equal(reg.status, 201);
 
   const errada = await callApi(env, 'POST', '/api/auth/login', {
@@ -776,11 +786,12 @@ test('auth e2e: login com senha errada → 401 AUTH_FAILED; correta → 200', as
 
 test('auth e2e: register com mesmo e-mail → 409 EMAIL_TAKEN', async () => {
   const env = { DB: mockD1() };
-  const r1 = await callApi(env, 'POST', '/api/auth/register', { body: CADASTRO });
+  const r1 = await callApi(env, 'POST', '/api/auth/register', { body: CADASTRO, headers: IP3 });
   assert.equal(r1.status, 201);
   // mesmo e-mail normalizado (case-insensitive)
   const r2 = await callApi(env, 'POST', '/api/auth/register', {
     body: { ...CADASTRO, email: 'MARIA@empresa.com.br' },
+    headers: IP3,
   });
   assert.equal(r2.status, 409);
   assert.equal((await r2.json()).error.code, 'EMAIL_TAKEN');
@@ -790,24 +801,27 @@ test('auth e2e: validações 400 do register', async () => {
   const env = { DB: mockD1() };
   const senhaFraca = await callApi(env, 'POST', '/api/auth/register', {
     body: { ...CADASTRO, senha: 'curta' },
+    headers: IP4,
   });
   assert.equal(senhaFraca.status, 400);
   assert.equal((await senhaFraca.json()).error.code, 'AUTH_WEAK_PASSWORD');
 
   const semOrg = await callApi(env, 'POST', '/api/auth/register', {
     body: { ...CADASTRO, org_id: '' },
+    headers: IP4,
   });
   assert.equal(semOrg.status, 400);
 
   const emailRuim = await callApi(env, 'POST', '/api/auth/register', {
     body: { ...CADASTRO, email: 'sem-arroba' },
+    headers: IP4,
   });
   assert.equal(emailRuim.status, 400);
 });
 
 test('auth e2e: logout → 200 e /api/me depois → 401 AUTH_REQUIRED', async () => {
   const env = { DB: mockD1() };
-  const reg = await callApi(env, 'POST', '/api/auth/register', { body: CADASTRO });
+  const reg = await callApi(env, 'POST', '/api/auth/register', { body: CADASTRO, headers: IP5 });
   const { session_token } = await reg.json();
 
   const logout = await callApi(env, 'POST', '/api/auth/logout', {
@@ -830,7 +844,7 @@ test('auth e2e: logout → 200 e /api/me depois → 401 AUTH_REQUIRED', async ()
 });
 
 test('auth e2e: sem binding D1 → 503 AUTH_UNAVAILABLE', async () => {
-  const reg = await callApi({}, 'POST', '/api/auth/register', { body: CADASTRO });
+  const reg = await callApi({}, 'POST', '/api/auth/register', { body: CADASTRO, headers: IP6 });
   assert.equal(reg.status, 503);
   assert.equal((await reg.json()).error.code, 'AUTH_UNAVAILABLE');
 
