@@ -32,6 +32,10 @@ Convenções gerais:
 | `/api/auth/login`   | POST   | 10/min  |
 | `/api/auth/logout`  | POST   | 120/min |
 | `/api/me`           | GET    | 120/min |
+| `/api/registro`     | POST   | 20/min  |
+| `/api/registro`     | GET    | 60/min  |
+| `/api/registro/:id` | GET    | 120/min |
+| `/api/registro/:id` | POST   | 60/min  |
 
 ---
 
@@ -515,6 +519,75 @@ Sessão ausente/expirada → `401 AUTH_REQUIRED` ("Sessão ausente ou expirada."
 
 ---
 
+## Bolsa de Registro (anti-dupla-venda)
+
+Registro público de títulos atestados: quem vai comprar um crédito consulta a situação
+dele antes de pagar e impede que o mesmo dossiê seja vendido duas vezes. Projeção
+`registry_titles` + trilha append-only `registry_events` (migração `0004_registro.sql`).
+
+> **Registro Kilo ≠ transferência fiscal.** A transferência do crédito é da SEFAZ
+> (CAT 42/SP). O registro só torna pública a intenção/situação do título.
+
+Ciclo de vida (`status`): `registered` → `listed` ⇄ `unlisted`(→`registered`) →
+`reserved` → `transferred` (novo dono pode listar de novo) · `canceled` (terminal).
+
+### POST /api/registro
+
+Registra um título. Corpo: o **envelope completo do passaporte** (mesmo JSON de
+`POST /api/verify`). A assinatura Ed25519 é verificada no ato — passaporte inválido
+ou adulterado não entra na bolsa.
+
+```bash
+curl -X POST https://<worker>/api/registro -H 'content-type: application/json' \
+  --data @passaporte.json
+```
+
+`201`:
+
+```json
+{
+  "titulo": {"passport_id": "psp_…", "status": "registered", "current_owner": "cnpj_…",
+             "holder_org_id": "cnpj_…", "rating": "A", "amount_cents": 250000000,
+             "jurisdiction": "BR-SP", "reference_period": {"from": "…", "to": "…"},
+             "input_hash": "sha256:…", "registered_at": "…", "updated_at": "…"},
+  "evento": {"event": "registered", "actor": "cnpj_…", "at": "…"},
+  "disclaimer": "Registro Kilo — não é transferência fiscal. A transferência do crédito é da SEFAZ (CAT 42)."
+}
+```
+
+Anti-dupla-venda: `UNIQUE(input_hash, holder_org_id)` — o mesmo dossiê do mesmo
+emissor não registra duas vezes → `409 TITLE_ALREADY_REGISTERED` (com `passport_id`
+do título já registrado, para consulta).
+
+### GET /api/registro
+
+Mural público. Filtro opcional `?status=registered|listed|reserved|transferred|canceled`
+(valor fora da lista → `400 INVALID_STATUS`). Até 100 títulos, mais recentes primeiro.
+
+### GET /api/registro/:id
+
+Situação de um título: `200 {"titulo": {…}, "eventos": […], "disclaimer": "…"}` —
+`eventos` é a trilha completa em ordem cronológica. Título inexistente →
+`404 TITLE_NOT_FOUND` (é a resposta "não consta na bolsa").
+
+### POST /api/registro/:id
+
+Transição de status. Corpo: `{"event": "<evento>", "actor": "<org_id>", "to_owner": "<org_id>"?}`.
+
+| Evento        | De                        | Quem (`actor`)        | Efeito |
+| ------------- | ------------------------- | --------------------- | ------ |
+| `listed`      | `registered`, `transferred` | dono atual          | põe à venda |
+| `unlisted`    | `listed`                  | dono atual            | retira da vitrine (→ `registered`) |
+| `reserved`    | `listed`                  | comprador (≠ dono)    | reserva o título |
+| `transferred` | `listed`, `reserved`      | dono atual + `to_owner` | muda `current_owner` |
+| `canceled`    | `registered`, `listed`, `reserved` | dono atual     | sai da bolsa (terminal) |
+
+`200 {"titulo": {…}, "evento": {…}, "disclaimer": "…"}`. Erros: `400 INVALID_EVENT` /
+`INVALID_ACTOR` / `INVALID_TO_OWNER` (ausente, igual ao dono ou fora de `transferred`),
+`403 NOT_TITLE_OWNER`, `404 TITLE_NOT_FOUND`, `409 INVALID_TRANSITION`.
+
+---
+
 ## Códigos de erro
 
 | Código                | HTTP | Onde                                              |
@@ -527,7 +600,8 @@ Sessão ausente/expirada → `401 AUTH_REQUIRED` ("Sessão ausente ou expirada."
 | `INVALID_AMOUNT`      | 400  | `/api/passaporte`                                 |
 | `INVALID_DOCUMENTS`   | 400  | `/api/passaporte`                                 |
 | `INVALID_CLOSING`     | 400  | `/api/passaporte`                                 |
-| `INVALID_PASSAPORTE`  | 400  | `/api/verify`                                     |
+| `INVALID_PASSAPORTE`  | 400  | `/api/verify`, `/api/registro` (POST)             |
+| `INVALID_SIGNATURE`   | 400  | `/api/registro` (POST, assinatura Ed25519 inválida) |
 | `INVALID_LEAD`        | 400  | `/api/lead`                                       |
 | `INVALID_SCAN_INPUT`  | 400  | `/api/scan`                                       |
 | `PAYLOAD_TOO_LARGE`   | 413  | `/api/scan` (corpo > 2 MB)                        |
@@ -542,8 +616,19 @@ Sessão ausente/expirada → `401 AUTH_REQUIRED` ("Sessão ausente ou expirada."
 | `AUTH_FAILED`         | 401  | `/api/auth/login` (mesma resposta p/ e-mail inexistente e senha errada) |
 | `AUTH_REQUIRED`       | 401  | `/api/me` (sessão ausente ou expirada)            |
 | `AUTH_UNAVAILABLE`    | 503  | rotas `/api/auth/*` e `/api/me` (binding D1 ausente) |
-| `NO_SIGNING_KEY`      | 503  | `/api/pubkey`, `/api/passaporte`, `/api/verify`   |
+| `NO_SIGNING_KEY`      | 503  | `/api/pubkey`, `/api/passaporte`, `/api/verify`, `/api/registro` (POST) |
 | `LEADS_UNAVAILABLE`   | 503  | `/api/lead`                                       |
+| `TITLE_ALREADY_REGISTERED` | 409 | `/api/registro` (POST) — mesmo dossiê já registrado |
+| `TITLE_NOT_FOUND`     | 404  | `/api/registro/:id`                               |
+| `INVALID_STATUS`      | 400  | `/api/registro` (GET, filtro `status` inválido)   |
+| `INVALID_EVENT`       | 400  | `/api/registro/:id` (POST, evento desconhecido)   |
+| `INVALID_ACTOR`       | 400  | `/api/registro/:id` (POST, `actor` ausente/inválido) |
+| `INVALID_NOTE`        | 400  | `/api/registro/:id` (POST, `note` não é texto)    |
+| `INVALID_PASSPORT_ID` | 400  | `/api/registro/:id` (GET, `passport_id` ausente na rota) |
+| `INVALID_TO_OWNER`    | 400  | `/api/registro/:id` (POST, `to_owner` ausente ou igual ao dono) |
+| `NOT_TITLE_OWNER`     | 403  | `/api/registro/:id` (POST, `actor` ≠ dono atual)  |
+| `INVALID_TRANSITION`  | 409  | `/api/registro/:id` (POST, transição fora do ciclo de vida) |
+| `REGISTRY_UNAVAILABLE` | 503 | rotas `/api/registro*` (binding D1 ausente)       |
 | `METHOD_NOT_ALLOWED`  | 405  | rota conhecida, método errado                     |
 | `NOT_FOUND`           | 404  | rota desconhecida                                 |
 | `INTERNAL`            | 500  | catch global (sem stacktrace)                     |
