@@ -8,7 +8,9 @@
 <link rel="icon" type="image/svg+xml" href="kilo-mark.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"></noscript>
 <style>
 /* ============ Reset & tokens ============ */
 *,*::before,*::after{box-sizing:border-box}
@@ -91,6 +93,13 @@ button{font:inherit}
 .dark .h2{color:var(--tx-d-strong)}
 .light .h2{color:var(--tx-l)}
 .lead-p{font-size:clamp(1.02rem,1.4vw,1.16rem);font-weight:340;line-height:1.75;max-width:60ch;margin-top:22px}
+.skip-link{
+  position:absolute;left:14px;top:-44px;z-index:240;
+  padding:10px 12px;background:var(--paper);color:var(--ink);
+  border:1px solid var(--amber-ink);font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;
+  text-decoration:none;text-transform:uppercase;
+}
+.skip-link:focus{top:10px}
 .mono{font-family:var(--mono)}
 .tabular{font-variant-numeric:tabular-nums}
 
@@ -134,6 +143,9 @@ button{font:inherit}
 .btn-ghost{border-color:var(--line-d-strong);color:var(--tx-d-strong);background:transparent}
 .btn-ghost:hover{border-color:var(--amber);color:var(--amber);transform:translateY(-1px)}
 .btn-sm{padding:10px 16px;font-size:.68rem}
+.btn:focus-visible,.nav-link:focus-visible,.foot-list a:focus-visible,.text-link:focus-visible,.faq summary:focus-visible{
+  outline:2px solid var(--amber);outline-offset:3px;
+}
 
 /* ============ Hero ============ */
 .hero{position:relative;padding:clamp(64px,9vw,120px) 0 clamp(72px,9vw,110px);overflow:hidden}
@@ -155,6 +167,15 @@ button{font:inherit}
   font-family:var(--mono);font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;color:var(--tx-d-soft);
 }
 .count-pill strong{font-weight:600;font-size:.95rem;color:var(--amber);font-variant-numeric:tabular-nums;letter-spacing:.08em}
+.hero-secondary{margin-top:18px}
+.text-link{
+  font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--tx-d-soft);text-decoration:none;border-bottom:1px solid var(--line-d-strong);padding-bottom:2px;
+}
+.text-link:hover{color:var(--amber);border-bottom-color:var(--amber)}
+.hero-meta{list-style:none;margin:24px 0 0;padding:0;display:grid;gap:8px}
+.hero-meta li{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;color:var(--tx-d-soft);text-transform:uppercase}
+.hero-meta li::before{content:"• ";color:var(--amber)}
 .hero-stamp{
   position:absolute;right:clamp(0px,3vw,40px);top:clamp(48px,7vw,96px);
   width:clamp(150px,17vw,216px);z-index:1;
@@ -217,6 +238,7 @@ button{font:inherit}
 }
 .calc-head{display:flex;align-items:baseline;justify-content:space-between;gap:14px;flex-wrap:wrap}
 .calc-title{font-weight:500;font-size:clamp(1.3rem,2vw,1.6rem);color:var(--tx-d-strong);letter-spacing:-.01em}
+.calc-intro{margin-top:14px;font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--tx-d-soft);line-height:1.7}
 .badge{
   font-family:var(--mono);font-weight:500;font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;
   border:1px solid transparent;padding:5px 12px;
@@ -488,6 +510,7 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var
   margin-top:26px;font-family:var(--mono);font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;
   color:var(--amber);
 }
+.final-note{margin-top:16px;font-size:.9rem;line-height:1.7;color:var(--tx-d-soft);max-width:52ch}
 
 /* ============ Footer ============ */
 .footer{border-top:1px solid var(--line-d);padding:64px 0 44px}
@@ -506,6 +529,7 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var
 </style>
 </head>
 <body>
+<a class="skip-link" href="#simular">Pular para a calculadora</a>
 <div class="grain" aria-hidden="true"></div>
 
 <!-- ============ 1. Nav ============ -->
@@ -537,16 +561,21 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var
     </div>
     <div class="hero-head">
       <p class="eyebrow rv">Crédito acumulado de ICMS · Rota CAT 42/SP</p>
-      <h1 class="h1 rv">Quanto vale o seu crédito de ICMS — <em>hoje</em>, e o que ele vira em <em>2033</em>.</h1>
+      <h1 class="h1 rv">Quanto do seu crédito de ICMS você preserva se agir antes de 2033?</h1>
       <p class="lead-p rv">
-        Simule o deságio justo do seu crédito acumulado e veja o que a LC&nbsp;214/2025
-        faz com quem chegar à transição sem homologar. O Passaporte Fiscal atesta a
-        completude documental do seu crédito — para comprador, advogado e fisco.
+        Em menos de 1 minuto, simule o deságio técnico do seu crédito acumulado.
+        O Passaporte Fiscal atesta completude documental para negociação e protocolo
+        — <em>sem confundir atesto com homologação</em>, que é ato da SEFAZ.
       </p>
       <div class="hero-cta rv">
-        <a class="btn btn-amber" href="#simular">Simular meu crédito</a>
-        <a class="btn btn-ghost" href="#como-funciona">Como funciona</a>
+        <a class="btn btn-amber" href="#simular">Simular agora</a>
       </div>
+      <p class="hero-secondary rv"><a class="text-link" href="#como-funciona">Entender o método em 3 passos</a></p>
+      <ul class="hero-meta rv" aria-label="Condições da simulação">
+        <li>Simulação gratuita</li>
+        <li>Resposta preliminar em até 48h úteis</li>
+        <li>Homologação continua sendo da SEFAZ</li>
+      </ul>
       <p class="count-pill rv" role="status">
         <span>Transição LC&nbsp;214</span>
         <strong><span class="js-days">—</span>&nbsp;dias</strong>
@@ -573,10 +602,11 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var
     <div class="sim-head">
       <div>
         <p class="eyebrow rv">Simulador</p>
-        <h2 class="h2 rv">A calculadora do deságio</h2>
+        <h2 class="h2 rv">Do valor nominal ao impacto da transição, sem chute</h2>
         <p class="lead-p rv">
-          Quatro entradas, dois cenários. À esquerda, o valor justo do crédito com o
-          dossiê atestado; à direita, o que ele vale se virar 240 parcelas na transição.
+          Ajuste quatro entradas e compare dois resultados: valor técnico com dossiê
+          atestado versus compensação em 240 parcelas caso a homologação não ocorra
+          antes da transição da LC&nbsp;214.
         </p>
       </div>
     </div>
@@ -588,6 +618,7 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var
           <h3 class="calc-title">Calculadora de deságio</h3>
           <span class="badge" id="badgeServer" aria-live="polite"></span>
         </div>
+        <p class="calc-intro" id="calcFlow">1. Preencha as entradas · 2. Compare os cenários · 3. Decida o próximo passo</p>
 
         <div class="field">
           <div class="field-head">
@@ -637,24 +668,24 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var
 
         <div class="res-grid" aria-live="polite">
           <div class="res-card good">
-            <p class="res-tag">Com passaporte</p>
+            <p class="res-tag">Com dossiê atestado</p>
             <p class="res-num" id="resFairValue" data-placeholder="true">—</p>
-            <p class="res-sub">deságio justo <strong id="resDesagio">—</strong></p>
+            <p class="res-sub">valor justo hoje · deságio <strong id="resDesagio">—</strong></p>
           </div>
           <div class="res-card">
-            <p class="res-tag">Sem homologar · LC 214</p>
+            <p class="res-tag">Sem homologação até 2033</p>
             <p class="res-num" id="resPV" data-placeholder="true">—</p>
-            <p class="res-sub">perda de <strong id="resPerda">—</strong> em 240 parcelas</p>
+            <p class="res-sub">valor em compensação · perda de <strong id="resPerda">—</strong></p>
           </div>
         </div>
 
         <p class="res-delta" id="resDelta" data-placeholder="true">
-          Homologar antes da transição preserva <strong>—</strong> do seu crédito.
+          Diferença estimada preservável com protocolo antes da transição: <strong>—</strong>.
         </p>
 
         <p class="calc-note">
           fv = vn·(1−g)/(1+i)^T &nbsp;·&nbsp; transição: pv de 240 parcelas mensais.
-          Estimativa técnica — não é parecer nem garantia de homologação.
+          Sem métricas promocionais: apenas fórmula, parâmetros declarados e conferência no servidor quando disponível.
         </p>
       </div>
 
@@ -662,10 +693,10 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var
       <aside class="lead-card rv" id="leadCard" aria-label="Receba a análise completa">
         <div id="leadFormWrap">
           <p class="lead-eyebrow">Análise preliminar · grátis</p>
-          <h3 class="lead-title">Receba a análise completa do seu crédito</h3>
+          <h3 class="lead-title">Receba uma leitura preliminar do seu dossiê</h3>
           <p class="lead-sub">
-            Deixe seus dados e enviamos o dossiê preliminar com o rating estimado
-            e os próximos passos da rota CAT&nbsp;42/SP.
+            Enviamos por e-mail a simulação registrada, o rating estimado e os
+            próximos passos documentais da rota CAT&nbsp;42/SP.
           </p>
           <form class="lead-form" id="leadForm" novalidate>
             <div>
@@ -690,7 +721,7 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var
               <input id="leadWebsite" name="website" type="text" tabindex="-1" autocomplete="off">
             </div>
             <p class="form-error" id="leadError" role="alert"></p>
-            <button class="btn btn-amber" id="leadSubmit" type="submit">Quero a análise completa</button>
+            <button class="btn btn-amber" id="leadSubmit" type="submit">Quero receber por e-mail</button>
             <p class="lead-fine">
               Sem spam. Usamos seus dados apenas para responder a esta solicitação.
             </p>
@@ -733,7 +764,7 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var
 <section class="section dark">
   <div class="wrap">
     <p class="eyebrow rv">Escopo do atestado</p>
-    <h2 class="h2 rv">Um atestado técnico, não uma promessa</h2>
+    <h2 class="h2 rv">O que atestamos e o que continua fora do nosso escopo</h2>
     <div class="attest-grid">
       <div class="attest-col rv">
         <p class="attest-h">O que o passaporte atesta</p>
@@ -766,6 +797,16 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var
             <div>
               <h3>Risco estimado de glosa</h3>
               <p>Rating heurístico A/B/C calibrado com padrões de glosa recorrentes — transparente, reproduzível e revisável.</p>
+            </div>
+          </li>
+          <li>
+            <svg class="attest-ico" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" focusable="false">
+              <circle cx="9" cy="9" r="8" fill="none" stroke="#E8B53A" stroke-width="1" stroke-dasharray="1.5 3"/>
+              <path d="M5.6 9.3l2.2 2.2 4.6-5" fill="none" stroke="#E8B53A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div>
+              <h3>Integridade verificável</h3>
+              <p>Input e output podem ser auditados por hash e assinatura, com verificação offline por terceiros.</p>
             </div>
           </li>
         </ul>
@@ -803,13 +844,24 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var
               <p>O deságio simulado é uma estimativa técnica. O preço final de um crédito é negociação entre as partes.</p>
             </div>
           </li>
+          <li>
+            <svg class="attest-ico" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" focusable="false">
+              <circle cx="9" cy="9" r="8" fill="none" stroke="rgba(185,192,207,.4)" stroke-width="1"/>
+              <path d="M5.5 9h7" fill="none" stroke="rgba(185,192,207,.55)" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+            <div>
+              <h3>Não antecipa decisão da SEFAZ</h3>
+              <p>Prazo, deferimento, glosa final e aproveitamento do crédito continuam sob rito e decisão do fisco.</p>
+            </div>
+          </li>
         </ul>
       </div>
     </div>
     <div class="pullquote rv">
       <span class="pullquote-mark" aria-hidden="true">&ldquo;</span>
       <blockquote>
-        Atesto, não homologo — homologação é da SEFAZ.
+        Atestamos consistência documental para reduzir ruído técnico.
+        <br>Homologação continua sendo decisão exclusiva da SEFAZ.
         <cite>Kilo · Passaporte Fiscal — princípio nº 1</cite>
       </blockquote>
     </div>
@@ -940,15 +992,16 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var
 <section class="final dark">
   <div class="wrap final-grid">
     <div>
-      <p class="eyebrow rv">Pronto para carimbar</p>
-      <h2 class="h2 rv">Seu crédito merece um dossiê à altura.</h2>
+      <p class="eyebrow rv">Próximo passo</p>
+      <h2 class="h2 rv">Se fizer sentido, começamos pelo diagnóstico documental.</h2>
       <p class="lead-p rv">
-        Rode a simulação, receba a análise preliminar e comece a preparação do
-        dossiê antes que a janela da transição comece a fechar.
+        Faça a simulação, registre seu contato e receba uma leitura preliminar para
+        decidir com seu time jurídico e fiscal se vale avançar no dossiê.
       </p>
       <p class="final-motto rv">Atesto, não homologo — homologação é da SEFAZ.</p>
+      <p class="final-note rv">Sem promessa de deferimento: a decisão fiscal permanece integralmente com a SEFAZ.</p>
       <div class="hero-cta rv">
-        <a class="btn btn-amber" href="#simular">Simular agora</a>
+        <a class="btn btn-amber" href="#simular">Simular e receber análise preliminar</a>
       </div>
     </div>
     <div class="final-stamp rv" aria-hidden="true">
@@ -1098,8 +1151,8 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var
     $('resDesagio').textContent = fmtPct(res.d);
     $('resPV').textContent = fmtBRL.format(res.pv);
     $('resPerda').textContent = fmtPct(res.perda);
-    $('resDelta').innerHTML = 'Homologar antes da transição preserva <strong>' +
-      fmtBRL.format(Math.max(0, res.fv - res.pv)) + '</strong> do seu crédito.';
+    $('resDelta').innerHTML = 'Diferença estimada preservável com protocolo antes da transição: <strong>' +
+      fmtBRL.format(Math.max(0, res.fv - res.pv)) + '</strong>.';
   }
 
   /* ============ Conferência pelo servidor ============ */
@@ -1308,7 +1361,7 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var
       .catch(function () { queueLead(payload); showSuccess(true); })
       .then(function () {
         btn.disabled = false;
-        btn.textContent = 'Quero a análise completa';
+        btn.textContent = 'Quero receber por e-mail';
       });
   });
 
