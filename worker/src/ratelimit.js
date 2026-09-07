@@ -4,6 +4,8 @@
 // PRIMARY KEY(bucket, window_start)) — ver migrations/0002_rate_limits.sql.
 // A janela é fixa de 60s: window_start = floor(unix_seg / 60).
 //
+ // v2: D1 incr usa RETURNING (1 round-trip) em vez de INSERT + SELECT.
+//
 // Fallback em memória (quando o binding D1 não existe, ex.: dev local sem --d1):
 // Map por isolate. É APROXIMADO: cada isolate tem seu próprio contador, então o limite
 // efetivo pode ser até N× o configurado (N = nº de isolates ativos). Serve para dev e
@@ -29,15 +31,12 @@ function memIncr(bucket, windowStart) {
 }
 
 async function d1Incr(db, bucket, windowStart) {
-  await db
+  const row = await db
     .prepare(
       `INSERT INTO rate_limits (bucket, window_start, count) VALUES (?, ?, 1)
-       ON CONFLICT(bucket, window_start) DO UPDATE SET count = count + 1`
+       ON CONFLICT(bucket, window_start) DO UPDATE SET count = count + 1
+       RETURNING count`
     )
-    .bind(bucket, windowStart)
-    .run();
-  const row = await db
-    .prepare('SELECT count FROM rate_limits WHERE bucket = ? AND window_start = ?')
     .bind(bucket, windowStart)
     .first();
   return row && typeof row.count === 'number' ? row.count : 1;
@@ -45,7 +44,7 @@ async function d1Incr(db, bucket, windowStart) {
 
 // Verifica o limite. Retorna { allowed: true } ou { allowed: false, retryAfter }.
 // Em caso de FALHA do D1 (tabela ausente, erro transitório), degrada para o fallback
-// em memória em vez de derrubar a requisição — disponibilidade > precisão do limite.
+ // em memória em vez de derrubar a requisição — disponibilidade > precisão do limite.
 export async function checkRateLimit(env, routeKey, limitPerMinute, ip) {
   const windowStart = Math.floor(Date.now() / 1000 / WINDOW_SECONDS);
   const bucket = routeKey + '|' + (ip || 'unknown');

@@ -48,7 +48,7 @@ const RATE_LIMITS = {
   'POST /api/passaporte': 10,
   'POST /api/scan': 10,
   'POST /api/verify': 60,
-  'POST /api/auth/register': 10,
+  'POST /api/auth/register': 5,
   'POST /api/auth/login': 10,
   'POST /api/registro': 20,
   'GET /api/registro': 60,
@@ -56,6 +56,12 @@ const RATE_LIMITS = {
 const DEFAULT_RATE_LIMIT = 120;
 const MAX_VN = 1e13;
 const MAX_AMOUNT_CENTS = 1e15;
+
+const SECURITY_HEADERS = {
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+};
 
 export default {
   async fetch(request, env, ctx) {
@@ -82,10 +88,14 @@ function resolveCorsOrigin(request, env) {
 }
 
 function withCors(response, corsOrigin) {
-  if (!corsOrigin) return response;
   const headers = new Headers(response.headers);
-  headers.set('Access-Control-Allow-Origin', corsOrigin);
-  if (corsOrigin !== '*') headers.set('Vary', 'Origin');
+  for (const [k, v] of Object.entries(SECURITY_HEADERS)) {
+    if (!headers.has(k)) headers.set(k, v);
+  }
+  if (corsOrigin) {
+    headers.set('Access-Control-Allow-Origin', corsOrigin);
+    if (corsOrigin !== '*') headers.set('Vary', 'Origin');
+  }
   return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,
@@ -94,7 +104,7 @@ function withCors(response, corsOrigin) {
 }
 
 function handleOptions(corsOrigin) {
-  const headers = new Headers();
+  const headers = new Headers(SECURITY_HEADERS);
   if (corsOrigin) {
     headers.set('Access-Control-Allow-Origin', corsOrigin);
     if (corsOrigin !== '*') headers.set('Vary', 'Origin');
