@@ -9,7 +9,7 @@
 #   3. wrangler d1 migrations apply kilo-passaporte --remote
 #   4. wrangler secret put SIGNING_KEY_JWK  (chave NUNCA vai neste arquivo)
 #
-v2 notes: minify + smart placement + CORS allowlist + compatibility_date atualizado.
+# v2 notes: minify + smart placement + CORS allowlist + compatibility_date atualizado.
 
 name = "kilo-passaporte"
 main = "src/index.js"
