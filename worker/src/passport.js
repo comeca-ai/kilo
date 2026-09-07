@@ -20,8 +20,7 @@ import { RULESET, RULESET_HASH } from './ruleset.js';
 import { evaluateClosing } from './closing.js';
 import { isNonEmptyString, isValidReferencePeriod } from './validate.js';
 
-// Cache de chaves importadas por isolate (importKey é relativamente caro; o JWK não muda em runtime).
-const keyCache = new Map(); // rawJwkString -> Promise<CryptoKey>
+const keyCache = new Map();
 
 function importKeyCached(raw, importFn) {
   let p = keyCache.get(raw);
@@ -44,7 +43,6 @@ function parseSigningJwk(env) {
   return jwk;
 }
 
-// JWK público derivado do secret (só campos públicos; kid propagado se existir).
 export function getPublicJwk(env) {
   const jwk = parseSigningJwk(env);
   const pub = { kty: 'OKP', crv: 'Ed25519', x: jwk.x };
@@ -54,19 +52,13 @@ export function getPublicJwk(env) {
 
 async function getPrivateKey(env) {
   return importKeyCached(env.SIGNING_KEY_JWK, (jwk) => {
-    // Workers exige JWA estrito: para Ed25519 o campo "alg" do JWK deve ser "EdDSA"
-    // (valor registrado na IANA). Chaves geradas com alg="Ed25519" (Node aceita)
-    // falham com DataError no importKey. Como o algoritmo já é passado no parâmetro
-    // do importKey, removemos "alg" — normalização aceita em ambos os runtimes.
     const normalized = { ...jwk };
     delete normalized.alg;
     return crypto.subtle.importKey('jwk', normalized, { name: 'Ed25519' }, false, ['sign']);
   });
 }
 
-// Cache separado para chaves públicas: a chave do Map não é JSON, então não dá para
-// reusar importKeyCached (que faz JSON.parse da chave de cache).
-const pubKeyCache = new Map(); // cacheKey -> Promise<CryptoKey>
+const pubKeyCache = new Map();
 
 async function getPublicKeyFromRaw(raw) {
   const jwk = JSON.parse(raw);
@@ -81,10 +73,6 @@ async function getPublicKeyFromRaw(raw) {
   return p;
 }
 
-// ---------------------------------------------------------------------------
-// Rating determinístico a partir dos documentos recebidos:
-//   completeness = presentes/4; grade = 4 docs -> A, 3 -> B, <=2 -> C.
-// ---------------------------------------------------------------------------
 const RATING_FACTORS = Object.freeze([
   'completude_documental',
   'aderencia_layout',
@@ -103,8 +91,6 @@ function computeRating(documents) {
   return { grade, completeness, missing };
 }
 
-// Findings do contrato: doc ausente (crítica), valor não positivo (crítica),
-// IE ausente (alta), reference_period malformado (alta). Vazio quando tudo ok.
 function computeFindings(body, missing) {
   const findings = [];
   if (missing.length > 0) {
@@ -124,10 +110,9 @@ function computeFindings(body, missing) {
 
 const ISSUER = 'fiscal-platform';
 const ROUTE_CANDIDATES = Object.freeze(['SP_ART84_NONINTERDEPENDENT']);
-const PASSPORT_TTL_MS = 30 * 24 * 60 * 60 * 1000; // expira em +30d
+const PASSPORT_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+export const PASSPORT_VERSION = 2;
 
-// Monta o objeto passaporte (sem assinatura). A validação 400 dos campos obrigatórios
-// acontece ANTES, no handler — aqui os campos já estão saneados.
 export async function buildPassaporte(body) {
   const documents = body.documents;
   const { grade, completeness, missing } = computeRating(documents);
@@ -141,8 +126,6 @@ export async function buildPassaporte(body) {
     reference_period: body.reference_period,
   });
 
-  // Ordem dos campos reproduz o contrato observado em produção (a assinatura usa o
-  // JSON canônico, então a ordem aqui é apenas cosmética/compatibilidade de leitura).
   return {
     passport_id: 'psp_' + randomHex(12),
     version: 1,
@@ -157,10 +140,6 @@ export async function buildPassaporte(body) {
     status_claim: 'DOCUMENTED_FOR_REVIEW',
     completeness,
     findings,
-    // Checklist de fechamento (diligência da contraparte, ver src/closing.js): só entra
-    // quando body.closing é array — sem o campo, o passaporte fica byte-a-byte igual
-    // ao contrato anterior (retrocompatibilidade de hash/assinatura). NÃO altera rating
-    // nem ruleset_hash. Posição cosmética: logo após findings.
     ...(Array.isArray(body.closing) ? { closing: evaluateClosing(body.closing) } : {}),
     evidence_manifest_hash: 'sha256:' + evidenceManifestHash,
     ruleset_hash: RULESET_HASH,
@@ -171,7 +150,58 @@ export async function buildPassaporte(body) {
   };
 }
 
-// Assina o passaporte: retorna o objeto completo com "signature" (base64 padrão).
+export async function buildPassaporteFromDossier({
+  holder_org_id,
+  jurisdiction,
+  credit_kind,
+  reference_period,
+  amount_cents,
+  closing,
+  dossier,
+}) {
+  if (!dossier || typeof dossier !== 'object' || !dossier.output_hash || !dossier.rating) {
+    throw new Error('buildPassaporteFromDossier: dossier do motor inválido');
+  }
+
+  const now = Date.now();
+  const grade = dossier.rating.grade;
+
+  return {
+    passport_id: 'psp_' + randomHex(12),
+    version: PASSPORT_VERSION,
+    issuer: ISSUER,
+    holder_org_id,
+    jurisdiction: jurisdiction || RULESET.jurisdiction,
+    credit_kind: credit_kind || RULESET.credit_kind,
+    route_candidates: [...ROUTE_CANDIDATES],
+    reference_period,
+    amount_cents,
+    rating: {
+      grade,
+      g: dossier.rating.g,
+      factors: [...RATING_FACTORS],
+      detalhe: dossier.rating.detalhe,
+    },
+    status_claim: 'DOCUMENTED_FOR_REVIEW',
+    completeness: dossier.completude,
+    findings: dossier.findings,
+    ...(Array.isArray(closing) ? { closing: evaluateClosing(closing) } : {}),
+    motor: {
+      ruleset: dossier.ruleset,
+      input_hash: dossier.input_hash,
+      output_hash: dossier.output_hash,
+      parsed_resumo: dossier.parsed_resumo,
+    },
+    evidence_manifest_hash: 'sha256:' + dossier.input_hash,
+    ruleset_hash: RULESET_HASH,
+    input_hash: 'sha256:' + dossier.input_hash,
+    output_hash: 'sha256:' + dossier.output_hash,
+    consent_id: null,
+    issued_at: new Date(now).toISOString(),
+    expires_at: new Date(now + PASSPORT_TTL_MS).toISOString(),
+  };
+}
+
 export async function signPassaporte(env, passaporte) {
   const key = await getPrivateKey(env);
   const payload = new TextEncoder().encode(canonicalStringify(passaporte));
@@ -179,8 +209,6 @@ export async function signPassaporte(env, passaporte) {
   return { ...passaporte, signature: bytesToBase64(new Uint8Array(sig)) };
 }
 
-// Extrai o objeto passaporte das três formas aceitas pelo contrato:
-// {"passaporte": {...}} | {"passport": {...}} | o objeto passaporte direto.
 export function extractPassaporte(body) {
   if (!body || typeof body !== 'object' || Array.isArray(body)) return null;
   if (body.passaporte && typeof body.passaporte === 'object') return body.passaporte;
@@ -189,9 +217,6 @@ export function extractPassaporte(body) {
   return null;
 }
 
-// Verifica a assinatura. Retorna { valid, verifiedWith }.
-// Tenta a chave atual ("Ed25519 / stable") e, se configurada, a anterior
-// ("Ed25519 / previous") — janela de rotação, ver RUNBOOK-CHAVE.md.
 export async function verifyPassaporte(env, passaporte) {
   if (!passaporte || typeof passaporte !== 'object' || !isNonEmptyString(passaporte.signature)) {
     return { valid: false, verifiedWith: null };
@@ -218,7 +243,7 @@ export async function verifyPassaporte(env, passaporte) {
       const ok = await crypto.subtle.verify({ name: 'Ed25519' }, pub, sigBytes, payload);
       if (ok) return { valid: true, verifiedWith: c.label };
     } catch {
-      // Chave mal configurada não deve derrubar a verificação: tenta a próxima.
+      // chave mal configurada: tenta a próxima
     }
   }
   return { valid: false, verifiedWith: candidates.length > 0 ? candidates[0].label : null };
