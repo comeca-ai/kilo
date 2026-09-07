@@ -1,0 +1,3 @@
+FIXTURE SINTETICO - Livro Registro de Apuracao do ICMS (ficticio)
+Industria Sintetica Ltda - CNPJ ficticio 11.222.333/0001-81 - competencia 08/2026
+Este arquivo nao contem dados reais; serve apenas para completude documental nos testes.

@@ -1,0 +1,67 @@
+{
+  "aviso": "GOLDEN FILES 100% SINTETICOS — NENHUM DADO REAL. Empresa ficticia: Industria Sintetica Ltda, CNPJ ficticio 11.222.333/0001-81, chaves de 44 digitos ficticias (DV nao oficial), competencia 2026-08.",
+  "params_comuns": {
+    "reference_period": { "from": "2026-08-01", "to": "2026-08-31" },
+    "amount_cents": 135000,
+    "state_registration": "123456789110"
+  },
+  "casos": [
+    {
+      "id": "A",
+      "descricao": "4 kinds exigidos presentes (efd + 3 nfe + apuracao + livro_registro), tudo coerente: EFD-A cobre as 3 chaves e o periodo 2026-08.",
+      "documents": [
+        { "kind": "nfe_xml", "arquivo": "nfe/nfe-1.xml" },
+        { "kind": "nfe_xml", "arquivo": "nfe/nfe-2.xml" },
+        { "kind": "nfe_xml", "arquivo": "nfe/nfe-3.xml" },
+        { "kind": "efd_icms_ipi", "arquivo": "efd/efd-a.txt" },
+        { "kind": "apuracao", "arquivo": "outros/apuracao.pdf" },
+        { "kind": "livro_registro", "arquivo": "outros/livro_registro.txt" }
+      ],
+      "esperado": {
+        "completude": 1,
+        "rating": "A",
+        "qtd_findings": 0,
+        "checks": []
+      }
+    },
+    {
+      "id": "B",
+      "descricao": "Sem livro_registro (3 dos 4 kinds): completude 0.75 -> base B; DOC-COMPLETE dispara (critica documental, ja precificada na completude) -> permanece B. Demais dados coerentes.",
+      "documents": [
+        { "kind": "nfe_xml", "arquivo": "nfe/nfe-1.xml" },
+        { "kind": "nfe_xml", "arquivo": "nfe/nfe-2.xml" },
+        { "kind": "nfe_xml", "arquivo": "nfe/nfe-3.xml" },
+        { "kind": "efd_icms_ipi", "arquivo": "efd/efd-a.txt" },
+        { "kind": "apuracao", "arquivo": "outros/apuracao.pdf" }
+      ],
+      "esperado": {
+        "completude": 0.75,
+        "rating": "B",
+        "qtd_findings": 1,
+        "checks": ["DOC-COMPLETE"]
+      }
+    },
+    {
+      "id": "C",
+      "descricao": "EFD-C com periodo 2025 (divergente da referencia 2026-08), apenas 1 das 3 chaves escriturada e XML duplicado divergente (nfe-3-dup). 4 findings: DOC-COMPLETE, PERIODO-COERENTE, VAL-012, VAL-006.",
+      "documents": [
+        { "kind": "nfe_xml", "arquivo": "nfe/nfe-1.xml" },
+        { "kind": "nfe_xml", "arquivo": "nfe/nfe-2.xml" },
+        { "kind": "nfe_xml", "arquivo": "nfe/nfe-3.xml" },
+        { "kind": "nfe_xml", "arquivo": "nfe/nfe-3-dup.xml" },
+        { "kind": "efd_icms_ipi", "arquivo": "efd/efd-c.txt" }
+      ],
+      "esperado": {
+        "completude": 0.5,
+        "rating": "C",
+        "qtd_findings": 4,
+        "checks": [
+          "DOC-COMPLETE",
+          "PERIODO-COERENTE",
+          "VAL-006-CHAVE-DUPLICADA",
+          "VAL-012-NFE-AUSENTE-EFD"
+        ]
+      }
+    }
+  ]
+}

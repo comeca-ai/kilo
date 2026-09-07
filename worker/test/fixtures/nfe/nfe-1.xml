@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  FIXTURE SINTÉTICO — NUNCA USAR DADOS REAIS.
+  Empresa fictícia: "Indústria Sintética Ltda" — CNPJ fictício 11.222.333/0001-81.
+  Chave de 44 dígitos fictícia (não valida DV oficial): competência 2026-08.
+  Layout mínimo NF-e 4.00 (nfeProc com protocolo), apenas campos que o motor lê.
+-->
+<nfeProc versao="4.00" xmlns="http://www.portalfiscal.inf.br/nfe">
+  <NFe>
+    <infNFe Id="NFe35260811222333000181550010000001011202608015" versao="4.00">
+      <ide>
+        <cUF>35</cUF>
+        <cNF>20260801</cNF>
+        <natOp>VENDA DE PRODUCAO DO ESTABELECIMENTO</natOp>
+        <mod>55</mod>
+        <serie>1</serie>
+        <nNF>101</nNF>
+        <dhEmi>2026-08-05T10:00:00-03:00</dhEmi>
+        <tpNF>1</tpNF>
+      </ide>
+      <emit>
+        <CNPJ>11222333000181</CNPJ>
+        <xNome>Industria Sintetica Ltda</xNome>
+      </emit>
+      <dest>
+        <CNPJ>44555666000177</CNPJ>
+        <xNome>Cliente Sintetico SA</xNome>
+      </dest>
+      <det nItem="1">
+        <prod>
+          <cProd>001</cProd>
+          <xProd>Produto Sintetico</xProd>
+          <vProd>1000.00</vProd>
+        </prod>
+      </det>
+      <total>
+        <ICMSTot>
+          <vBC>1000.00</vBC>
+          <vICMS>180.00</vICMS>
+          <vNF>1000.00</vNF>
+        </ICMSTot>
+      </total>
+    </infNFe>
+  </NFe>
+  <protNFe versao="4.00">
+    <infProt>
+      <chNFe>35260811222333000181550010000001011202608015</chNFe>
+      <nProt>135260000000001</nProt>
+    </infProt>
+  </protNFe>
+</nfeProc>
