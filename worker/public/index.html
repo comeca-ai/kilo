@@ -6,46 +6,69 @@
 <title>Kilo · Simule o deságio do ICMS</title>
 <meta name="description" content="Simule o deságio técnico do crédito acumulado de ICMS (CAT 42/SP). Homologação é da SEFAZ.">
 <link rel="icon" type="image/svg+xml" href="kilo-mark.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..600;1,6..72,300..500&family=Archivo:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#0B0F1A;--paper:#F5EFE0;--amber:#E8B53A;--line:rgba(245,239,224,.16);
-    --soft:#8E97AA;--strong:#EDE7D6;
-    --serif:Georgia,"Times New Roman",serif;
-    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --ink-page:#080B12;--ink-800:#0B0F19;--ink-850:#0A0E17;--ink-750:#0F1522;
+    --line:#1B2436;--line-strong:#26314A;
+    --text-hi:#EEF1F7;--text-body:#B4BFD2;--text-muted:#8A97AE;--text-faint:#7C89A3;
+    --paper:#F5F0E4;--amber:#E8B44A;--amber-hi:#F4CE7C;--green:#7BD3AD;
+    --serif:"Newsreader",Georgia,serif;
+    --sans:"Archivo",system-ui,sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--ink);color:var(--strong);font:17px/1.5 var(--serif)}
-  a{color:var(--amber)}
+  html,body{margin:0;background:var(--ink-page);color:var(--text-hi);font:16px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+  a{color:var(--amber);text-decoration:none}
+  a:hover{color:var(--amber-hi)}
+  :focus-visible{outline:2px solid var(--amber);outline-offset:2px;border-radius:4px}
+  ::selection{background:var(--amber);color:var(--ink-800)}
   .wrap{max-width:720px;margin:0 auto;padding:20px 16px 64px}
-  header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:20px;border-bottom:1px solid var(--line)}
-  .brand{display:flex;align-items:center;gap:8px;color:var(--strong);text-decoration:none;font-family:var(--mono);font-size:.72rem;letter-spacing:.16em;text-transform:uppercase}
-  .brand img{width:28px;height:28px}
-  h1{font-size:clamp(1.6rem,4vw,2.2rem);font-weight:500;letter-spacing:-.02em;margin:18px 0 8px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:18px;border-bottom:1px solid var(--line)}
+  .brand{display:flex;align-items:center;gap:10px;color:var(--text-hi)}
+  .mark{width:36px;height:36px;border-radius:10px;background:var(--paper);color:var(--ink-800);display:grid;place-items:center;font-family:var(--serif);font-size:21px;box-shadow:0 2px 0 0 var(--amber)}
+  .brand-txt{display:flex;flex-direction:column;gap:2px}
+  .brand-txt strong{font:500 11px/1.2 var(--mono);letter-spacing:.16em}
+  .brand-txt span{font:10px/1.2 var(--mono);letter-spacing:.16em;color:var(--text-faint)}
+  .pills{display:flex;flex-wrap:wrap;gap:7px}
+  .pill{padding:5px 11px;border-radius:100px;border:1px solid var(--line-strong);font:10.5px/1.2 var(--mono);color:var(--text-muted)}
+  .pill.ok{background:rgba(98,195,155,.1);border-color:rgba(98,195,155,.32);color:var(--green)}
+  h1{font:400 clamp(1.7rem,5vw,2.6rem)/1.05 var(--serif);letter-spacing:-.022em;margin:22px 0 8px;color:var(--paper)}
   h1 em{font-style:italic;color:var(--amber)}
-  .sub{color:var(--soft);margin:0 0 22px}
-  label{display:block;font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);margin:14px 0 6px}
-  input{width:100%;background:#101627;color:var(--strong);border:1px solid var(--line);border-radius:8px;padding:12px 14px;font:15px var(--mono)}
+  .sub{color:var(--text-body);margin:0 0 22px;max-width:46ch}
+  label{display:block;font:10.5px/1.2 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--text-faint);margin:16px 0 6px}
+  input{width:100%;background:var(--ink-850);color:var(--text-hi);border:1px solid var(--line-strong);border-radius:9px;padding:12px 14px;font:15px var(--mono)}
   .grades{display:flex;gap:8px}
-  .grades button{flex:1;border:1px dashed var(--line);background:transparent;color:var(--strong);padding:12px 8px;border-radius:999px;font:700 14px var(--mono);cursor:pointer}
-  .grades button[aria-pressed="true"]{border-color:var(--amber);color:var(--amber)}
-  .out{margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
-  .num{font:600 clamp(1.4rem,4vw,2rem)/1.1 var(--mono);color:var(--amber);margin:4px 0 14px}
-  .muted{font-family:var(--mono);font-size:.72rem;color:var(--soft);line-height:1.6}
-  footer{margin-top:40px;font-family:var(--mono);font-size:.68rem;color:var(--soft)}
+  .grades button{flex:1;border:1px solid var(--line);background:var(--ink-850);color:var(--text-hi);padding:12px 8px;border-radius:12px;font:600 13px var(--mono);cursor:pointer}
+  .grades button[aria-pressed="true"]{border-color:var(--amber);color:var(--amber);background:rgba(232,180,74,.09)}
+  .out{margin-top:22px;padding:18px 16px;border:1px solid var(--line);border-radius:18px;background:var(--ink-750)}
+  .num{font:400 clamp(1.5rem,4vw,2.1rem)/1.1 var(--serif);letter-spacing:-.02em;color:var(--amber);margin:4px 0 14px;font-variant-numeric:tabular-nums}
+  .muted{font-family:var(--mono);font-size:.72rem;color:var(--text-muted);line-height:1.6}
+  .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+  .btn{display:inline-flex;align-items:center;justify-content:center;padding:11px 16px;border-radius:9px;font:600 14px var(--sans)}
+  .btn-pri{background:var(--amber);color:var(--ink-800)}
+  .btn-pri:hover{background:var(--amber-hi);color:var(--ink-800)}
+  .btn-sec{border:1px solid var(--line-strong);color:var(--text-body)}
+  footer{margin-top:40px;font-family:var(--mono);font-size:.68rem;color:var(--text-faint)}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <a class="brand" href="#topo">
-      <img src="kilo-mark.svg" alt="">
-      Kilo · Passaporte Fiscal
+    <a class="brand" href="#busca">
+      <span class="mark" aria-hidden="true">P</span>
+      <span class="brand-txt"><strong>PASSAPORTE</strong><span>FISCAL · BR-SP</span></span>
     </a>
-    <span class="muted">CAT 42/SP</span>
+    <div class="pills">
+      <span class="pill">CAT 42 / SP</span>
+      <span class="pill ok">atesto · não homologo</span>
+    </div>
   </header>
   <h1 id="topo">Simule o deságio. <em>Agora.</em></h1>
-  <p class="sub">Valor nominal e rating. Homologação continua da SEFAZ.</p>
-  <form id="sim" novalidate>
+  <p class="sub">Valor nominal e rating do dossiê. Homologação continua da SEFAZ.</p>
+  <form id="busca" novalidate>
     <label for="vn">Valor nominal do crédito (R$)</label>
     <input id="vn" inputmode="numeric" value="2.500.000" autocomplete="off">
     <label>Rating estimado do dossiê</label>
@@ -55,9 +78,9 @@
       <button type="button" data-g="C" aria-pressed="false">C · 12%</button>
     </div>
     <label for="i">Taxa mensal i (%)</label>
-    <input id="i" type="number" min="0.5" max="3" step="0.1" value="1.5">
+    <input id="i" type="number" min="0.5" max="4" step="0.1" value="1.5">
     <label for="T">Prazo T (meses)</label>
-    <input id="T" type="number" min="1" max="360" step="1" value="12">
+    <input id="T" type="number" min="3" max="48" step="1" value="12">
   </form>
   <div class="out" aria-live="polite">
     <div class="muted">Com dossiê atestado · valor justo hoje</div>
@@ -65,7 +88,11 @@
     <div class="muted">Sem homologar até 2033 · PV de 240 parcelas</div>
     <div class="num" id="pv">—</div>
     <p class="muted" id="delta"></p>
-    <p class="muted">fv = vn·(1−g)/(1+i)^T · transição = anuidade de 240 parcelas. Heurística, não homologação.</p>
+    <p class="muted">fv = VN·(1−g)/(1+i)^T · transição = anuidade de 240 parcelas. Heurística, não homologação.</p>
+    <div class="actions">
+      <a class="btn btn-pri" href="/passaporte/">Abrir o passaporte</a>
+      <a class="btn btn-sec" href="/login/">Entrar</a>
+    </div>
   </div>
   <footer>Atesto, não homologo. Fórmulas em worker/src/pricing.js.</footer>
 </div>
