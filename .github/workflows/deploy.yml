@@ -77,8 +77,10 @@ jobs:
           set -e
           mkdir -p public/passaporte
           cp ../apps/passaporte/index.html public/passaporte/index.html
+          cp ../apps/passaporte/app.js public/passaporte/app.js
           test -s public/passaporte/index.html
-          echo "app copiado: $(wc -c < public/passaporte/index.html) bytes"
+          test -s public/passaporte/app.js
+          echo "app copiado: $(wc -c < public/passaporte/index.html) + $(wc -c < public/passaporte/app.js) bytes"
 
       - name: Deploy do Worker + static assets
         run: npx wrangler deploy
