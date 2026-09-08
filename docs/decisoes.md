@@ -1,8 +1,7 @@
 # Decisões
 
-- 2026-09-07: primeira tela = simulador. Tese, FAQ e lead saem do primeiro viewport.
-- Números calculam no browser. Sem placeholder —.
-- Página editorial guardada em landing-editorial.html.
-- 2026-09-08: visual do app em `/passaporte` passa a ser o handoff "Kilo Passaporte Fiscal" (Newsreader / Archivo / JetBrains Mono, ink `#080B12`, âmbar `#E8B44A`). Fonte canônica: `apps/passaporte/index.html`.
-- `/` continua o job (simular deságio sem scroll). Tokens do handoff, CTA para o app.
-- Bundle offline de 1,1 MB saiu: quebrava em "Unpacking..." no Worker.
+- 2026-09-07: primeira tela pública (`/`) = simulador.
+- 2026-09-08: visual do app em `/passaporte` = handoff Kilo (ink `#080B12`, âmbar `#E8B44A`).
+- 2026-09-08 (tarde): ordem do produto no app — **A** dossiê/mesa primeiro; **B** simulador e emissão só depois do `POST /api/scan`.
+- PDF/planilha/balanço não são parseados. Contam como `apuracao` ou `livro_registro` na completude.
+- Sem scan não abre número de deságio nem assinatura.
